@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dil-connector-config
+  namespace: dil-connector
+data:
+  kubernetes.json: |
+    {
+      "server": {
+        "host": "0.0.0.0",
+        "port": 8282
+      },
+      "database": {
+        "url": "postgresql+psycopg://connector:connector@dil-connector-postgres:5432/connector",
+        "echo": false
+      },
+      "auth": {
+        "provider": "json-header-any",
+        "staticBearerToken": ""
+      },
+      "dsp": {
+        "context": "https://w3id.org/dspace/2025/1/context.jsonld",
+        "connectorId": "DIL_CONNECTOR",
+        "publicEndpointUrl": "http://dil-connector:8282/api/dsp",
+        "callbackHostOverride": "",
+        "protocolBasePaths": [
+          "/api/dsp",
+          "/api/v1/dsp/2025/1",
+          "/api/v1/dsp/<version>"
+        ]
+      },
+      "catalog": {
+        "participantId": "DIL_PARTICIPANT",
+        "serviceEndpointUrl": "http://dil-connector:8282/api/dsp",
+        "dataServiceType": "dspace:connector",
+        "seedFile": "data/seed.json",
+        "rawCatalog": null,
+        "seedDatasetIds": [
+          "CAT0101",
+          "CAT0102"
+        ]
+      },
+      "contract": {
+        "flowDelayMs": 180,
+        "consumerFlows": {},
+        "providerFlows": {}
+      },
+      "metadata": {
+        "protocolVersions": [
+          {
+            "version": "2025-1",
+            "path": "/api/dsp",
+            "binding": "HTTP"
+          }
+        ]
+      },
+      "dcp": {
+        "enabled": true,
+        "holderDid": "did:web:dil-connector:holder",
+        "issuerDid": "did:web:dil-connector:issuer",
+        "verifierDid": "did:web:dil-connector:verifier",
+        "thirdPartyDid": "did:web:dil-connector:thirdparty",
+        "credentialServiceEndpoint": "http://dil-connector:8282",
+        "issuerServiceEndpoint": "http://dil-connector:8282",
+        "verifierTriggerEndpoint": "http://dil-connector:8282/api/trigger",
+        "tokenValidationMode": "did-jwt",
+        "didResolutionOverrideBaseUrl": "",
+        "callbackHostOverride": "",
+        "keycloak": {
+          "introspectionUrl": "",
+          "clientId": "",
+          "clientSecret": "",
+          "verifyTls": true
+        }
+      }
+    }

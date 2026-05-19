@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dil-connector-management
+  namespace: dil-connector
+spec:
+  selector:
+    app: dil-connector-management
+  ports:
+    - name: http
+      port: 8283
+      targetPort: http

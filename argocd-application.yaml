@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dil-connector
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Data-Space-Lab/DIL-Connector-Deploynment.git
+    targetRevision: HEAD
+    path: .
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dil-connector
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

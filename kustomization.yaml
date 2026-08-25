@@ -12,5 +12,7 @@ resources:
   - service.yaml
   - management-deployment.yaml
   - management-service.yaml
+  - dataplane-deployment.yaml
+  - dataplane-service.yaml
   - referencegrant.yaml
   - route.yaml

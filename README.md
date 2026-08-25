@@ -4,12 +4,14 @@ Helm, Kustomize, and Argo CD manifests for deploying the DIL Connector from:
 
 ```text
 ghcr.io/data-space-lab/dil-connector:latest
+ghcr.io/data-space-lab/dil-connector-dataplane:latest
 ```
 
 The deployment starts:
 
 - `dil-connector` on port `8282` for DSP/DCP traffic
 - `dil-connector-management` on port `8283` for management API traffic
+- `dil-connector-dataplane` on port `8284` for negotiated data transfers
 - `dil-connector-postgres` with a persistent volume
 
 ## Private GHCR Image Pulls
@@ -86,6 +88,8 @@ kubectl apply -f argocd-application.yaml
 
 - `values.yaml` or ManagementAPI `helm_values`: connector IDs, public endpoint
   URL, DID values, callback settings, Keycloak settings, catalog values.
+- `dataplane.rcloneEnabled`: set to `true` only after rclone remotes and
+  credentials are mounted/configured for the tenant.
 - `configmap.yaml`: legacy Kustomize-only connector settings.
 - `route.yaml`: hostname and gateway namespace/name.
 - `postgres-secret.yaml`: replace the default demo database password for a real

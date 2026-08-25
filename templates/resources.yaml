@@ -328,3 +328,68 @@ spec:
       port: {{ .Values.management.port }}
       targetPort: http
 {{- end }}
+{{- if .Values.dataplane.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dil-connector-dataplane
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  replicas: {{ .Values.dataplane.replicas }}
+  selector:
+    matchLabels:
+      app: dil-connector-dataplane
+  template:
+    metadata:
+      labels:
+        app: dil-connector-dataplane
+    spec:
+      serviceAccountName: dil-connector
+      containers:
+        - name: dil-connector-dataplane
+          image: "{{ .Values.dataplane.image.repository }}:{{ .Values.dataplane.image.tag }}"
+          imagePullPolicy: {{ .Values.dataplane.image.pullPolicy | quote }}
+          command:
+            - uvicorn
+            - dataplane.main:app
+            - --host
+            - 0.0.0.0
+            - --port
+            - {{ .Values.dataplane.port | quote }}
+          env:
+            - name: DATAPLANE_RCLONE_ENABLED
+              value: {{ .Values.dataplane.rcloneEnabled | quote }}
+            - name: DATAPLANE_OPCUA_ENABLED
+              value: {{ .Values.dataplane.opcuaEnabled | quote }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.dataplane.port }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dil-connector-dataplane
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  selector:
+    app: dil-connector-dataplane
+  ports:
+    - name: http
+      port: {{ .Values.dataplane.port }}
+      targetPort: http
+{{- end }}

@@ -58,9 +58,11 @@ resources:
   requests:
     cpu: 100m
     memory: 256Mi
+    ephemeral-storage: 128Mi
   limits:
     cpu: 500m
     memory: 512Mi
+    ephemeral-storage: 1Gi
 
 postgres:
   image: postgres:16
@@ -77,6 +79,17 @@ management:
   enabled: true
   replicas: 1
   port: 8283
+
+dataplane:
+  enabled: true
+  image:
+    repository: ghcr.io/data-space-lab/dil-connector-dataplane
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  port: 8284
+  rcloneEnabled: false
+  opcuaEnabled: false
 
 service:
   port: 8282

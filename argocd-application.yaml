@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/Data-Space-Lab/DIL-Connector-Deploynment.git
+    repoURL: https://github.com/Data-Space-Lab/DIL-Connector-deployment.git
     targetRevision: HEAD
     path: .
   destination:

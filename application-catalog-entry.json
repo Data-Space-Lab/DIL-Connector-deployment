@@ -1,0 +1,22 @@
+{
+  "name": "dil-connector",
+  "display_name": "DIL Connector",
+  "description": "DSP/DCP connector with tenant-specific public identity and catalog metadata.",
+  "repo_url": "https://github.com/Data-Space-Lab/DIL-Connector-deployment.git",
+  "target_revision": "HEAD",
+  "path": ".",
+  "namespace": "dil-connector",
+  "enabled": true,
+  "helm_values": "connector:\n  publicHost: dil-connector.{tenant_host}\n  publicBaseUrl: https://dil-connector.{tenant_host}\ncatalog:\n  participantId: did:web:dil-connector.{tenant_host}\n  serviceEndpointUrl: https://dil-connector.{tenant_host}/api/dsp\ndcp:\n  holderDid: did:web:dil-connector.{tenant_host}\n  issuerDid: did:web:dil-connector.{tenant_host}:issuer\n  verifierDid: did:web:dil-connector.{tenant_host}:verifier\n  thirdPartyDid: did:web:dil-connector.{tenant_host}:thirdparty\n  credentialServiceEndpoint: https://dil-connector.{tenant_host}\n  issuerServiceEndpoint: https://dil-connector.{tenant_host}\n  verifierTriggerEndpoint: https://dil-connector.{tenant_host}/api/trigger\n",
+  "routes": [
+    {
+      "route_name": "dil-connector",
+      "service_name": "dil-connector",
+      "service_namespace": "dil-connector",
+      "service_port": 8282,
+      "hostname": "dil-connector.{tenant_host}",
+      "path_prefix": "/",
+      "no_url_rewrite": true
+    }
+  ]
+}

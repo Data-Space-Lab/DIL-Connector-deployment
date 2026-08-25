@@ -1,0 +1,330 @@
+{{- $publicBaseUrl := trimSuffix "/" .Values.connector.publicBaseUrl -}}
+{{- $dspBasePath := .Values.connector.dspBasePath -}}
+{{- $participantDid := default (printf "did:web:%s" .Values.connector.publicHost) .Values.catalog.participantId -}}
+{{- $serviceEndpointUrl := default (printf "%s%s" $publicBaseUrl $dspBasePath) .Values.catalog.serviceEndpointUrl -}}
+{{- $holderDid := default $participantDid .Values.dcp.holderDid -}}
+{{- $issuerDid := default (printf "%s:issuer" $participantDid) .Values.dcp.issuerDid -}}
+{{- $verifierDid := default (printf "%s:verifier" $participantDid) .Values.dcp.verifierDid -}}
+{{- $thirdPartyDid := default (printf "%s:thirdparty" $participantDid) .Values.dcp.thirdPartyDid -}}
+{{- $credentialServiceEndpoint := default $publicBaseUrl .Values.dcp.credentialServiceEndpoint -}}
+{{- $issuerServiceEndpoint := default $publicBaseUrl .Values.dcp.issuerServiceEndpoint -}}
+{{- $verifierTriggerEndpoint := default (printf "%s/api/trigger" $publicBaseUrl) .Values.dcp.verifierTriggerEndpoint -}}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace | quote }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dil-connector
+  namespace: {{ .Values.namespace | quote }}
+{{- if .Values.imagePullSecrets }}
+imagePullSecrets:
+{{- range .Values.imagePullSecrets }}
+  - name: {{ . | quote }}
+{{- end }}
+{{- end }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dil-connector-postgres
+  namespace: {{ .Values.namespace | quote }}
+type: Opaque
+stringData:
+  POSTGRES_DB: {{ .Values.database.name | quote }}
+  POSTGRES_USER: {{ .Values.database.username | quote }}
+  POSTGRES_PASSWORD: {{ .Values.database.password | quote }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dil-connector-postgres-data
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.database.storage | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dil-connector-config
+  namespace: {{ .Values.namespace | quote }}
+data:
+  kubernetes.json: |
+    {
+      "server": {
+        "host": "0.0.0.0",
+        "port": {{ .Values.service.port }}
+      },
+      "database": {
+        "url": "postgresql+psycopg://{{ .Values.database.username }}:{{ .Values.database.password }}@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}",
+        "echo": {{ .Values.database.echo }}
+      },
+      "auth": {
+        "provider": {{ .Values.connector.auth.provider | quote }},
+        "staticBearerToken": {{ .Values.connector.auth.staticBearerToken | quote }}
+      },
+      "dsp": {
+        "context": "https://w3id.org/dspace/2025/1/context.jsonld",
+        "connectorId": {{ .Values.connector.connectorId | quote }},
+        "publicEndpointUrl": {{ printf "%s%s" $publicBaseUrl $dspBasePath | quote }},
+        "callbackHostOverride": {{ .Values.connector.callbackHostOverride | quote }},
+        "protocolBasePaths": [
+          "/api/dsp",
+          "/api/v1/dsp/2025/1",
+          "/api/v1/dsp/<version>"
+        ]
+      },
+      "catalog": {
+        "participantId": {{ $participantDid | quote }},
+        "serviceEndpointUrl": {{ $serviceEndpointUrl | quote }},
+        "dataServiceType": {{ .Values.catalog.dataServiceType | quote }},
+        "seedFile": {{ .Values.catalog.seedFile | quote }},
+        "rawCatalog": null,
+        "seedDatasetIds": {{ .Values.catalog.seedDatasetIds | toJson }}
+      },
+      "contract": {
+        "flowDelayMs": 180,
+        "consumerFlows": {},
+        "providerFlows": {}
+      },
+      "metadata": {
+        "protocolVersions": [
+          {
+            "version": "2025-1",
+            "path": "/api/dsp",
+            "binding": "HTTP"
+          }
+        ]
+      },
+      "dcp": {
+        "enabled": {{ .Values.dcp.enabled }},
+        "holderDid": {{ $holderDid | quote }},
+        "issuerDid": {{ $issuerDid | quote }},
+        "verifierDid": {{ $verifierDid | quote }},
+        "thirdPartyDid": {{ $thirdPartyDid | quote }},
+        "credentialServiceEndpoint": {{ $credentialServiceEndpoint | quote }},
+        "issuerServiceEndpoint": {{ $issuerServiceEndpoint | quote }},
+        "verifierTriggerEndpoint": {{ $verifierTriggerEndpoint | quote }},
+        "tokenValidationMode": {{ .Values.dcp.tokenValidationMode | quote }},
+        "didResolutionOverrideBaseUrl": {{ .Values.connector.didResolutionOverrideBaseUrl | quote }},
+        "callbackHostOverride": {{ .Values.connector.callbackHostOverride | quote }},
+        "keycloak": {
+          "introspectionUrl": {{ .Values.dcp.keycloak.introspectionUrl | quote }},
+          "clientId": {{ .Values.dcp.keycloak.clientId | quote }},
+          "clientSecret": {{ .Values.dcp.keycloak.clientSecret | quote }},
+          "verifyTls": {{ .Values.dcp.keycloak.verifyTls }}
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dil-connector-postgres
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dil-connector-postgres
+  template:
+    metadata:
+      labels:
+        app: dil-connector-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: {{ .Values.postgres.image | quote }}
+          imagePullPolicy: {{ .Values.postgres.imagePullPolicy | quote }}
+          envFrom:
+            - secretRef:
+                name: dil-connector-postgres
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - name: postgres
+              containerPort: 5432
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - {{ .Values.database.username | quote }}
+                - -d
+                - {{ .Values.database.name | quote }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - {{ .Values.database.username | quote }}
+                - -d
+                - {{ .Values.database.name | quote }}
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          resources:
+{{ toYaml .Values.postgres.resources | indent 12 }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: dil-connector-postgres-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dil-connector-postgres
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  selector:
+    app: dil-connector-postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dil-connector
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  replicas: {{ .Values.connector.replicas }}
+  selector:
+    matchLabels:
+      app: dil-connector
+  template:
+    metadata:
+      labels:
+        app: dil-connector
+    spec:
+      serviceAccountName: dil-connector
+      containers:
+        - name: dil-connector
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          env:
+            - name: CONNECTOR_SETTINGS_PATH
+              value: /app/settings/kubernetes.json
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          volumeMounts:
+            - name: config
+              mountPath: /app/settings/kubernetes.json
+              subPath: kubernetes.json
+              readOnly: true
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: dil-connector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dil-connector
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  selector:
+    app: dil-connector
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
+{{- if .Values.management.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dil-connector-management
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  replicas: {{ .Values.management.replicas }}
+  selector:
+    matchLabels:
+      app: dil-connector-management
+  template:
+    metadata:
+      labels:
+        app: dil-connector-management
+    spec:
+      serviceAccountName: dil-connector
+      containers:
+        - name: dil-connector-management
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          command:
+            - uvicorn
+            - app.main_mgmt:app
+            - --host
+            - 0.0.0.0
+            - --port
+            - {{ .Values.management.port | quote }}
+          env:
+            - name: CONNECTOR_SETTINGS_PATH
+              value: /app/settings/kubernetes.json
+          ports:
+            - name: http
+              containerPort: {{ .Values.management.port }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          volumeMounts:
+            - name: config
+              mountPath: /app/settings/kubernetes.json
+              subPath: kubernetes.json
+              readOnly: true
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: dil-connector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dil-connector-management
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  selector:
+    app: dil-connector-management
+  ports:
+    - name: http
+      port: {{ .Values.management.port }}
+      targetPort: http
+{{- end }}

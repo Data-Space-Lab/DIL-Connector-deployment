@@ -16,7 +16,7 @@ spec:
       serviceAccountName: dil-connector
       containers:
         - name: dil-connector-management
-          image: ghcr.io/data-space-lab/dil.-connector:latest
+          image: ghcr.io/data-space-lab/dil-connector:latest
           imagePullPolicy: Always
           command:
             - uvicorn

@@ -1,9 +1,9 @@
 # DIL Connector Deployment
 
-Kustomize and ArgoCD manifests for deploying the DIL Connector from:
+Helm, Kustomize, and Argo CD manifests for deploying the DIL Connector from:
 
 ```text
-ghcr.io/data-space-lab/dil.-connector:latest
+ghcr.io/data-space-lab/dil-connector:latest
 ```
 
 The deployment starts:
@@ -34,6 +34,34 @@ token for that organization.
 The `dil-connector` ServiceAccount references `ghcr-pull-secret`, so the Pods
 can pull the private image once that Secret exists.
 
+## Deploy With ManagementAPI
+
+Use `application-catalog-entry.json` as the ManagementAPI deployable
+application payload. ManagementAPI renders tenant placeholders in
+`helm_values`, so each tenant gets its own public route, DSP endpoint, and DID
+values.
+
+For tenant `material`, the catalog entry renders values such as:
+
+```text
+connector.publicHost=dil-connector.material.dil.collab-cloud.eu
+catalog.participantId=did:web:dil-connector.material.dil.collab-cloud.eu
+catalog.serviceEndpointUrl=https://dil-connector.material.dil.collab-cloud.eu/api/dsp
+```
+
+These values are deployment-owned identity values. They should not be edited in
+the GUI catalog creation form.
+
+## Deploy With Helm
+
+```bash
+helm upgrade --install dil-connector . \
+  --namespace dil-connector \
+  --create-namespace \
+  --set connector.publicHost=dil-connector.example.org \
+  --set connector.publicBaseUrl=https://dil-connector.example.org
+```
+
 ## Deploy With Kustomize
 
 ```bash
@@ -56,8 +84,9 @@ kubectl apply -f argocd-application.yaml
 
 ## Things To Adjust
 
-- `configmap.yaml`: connector IDs, public endpoint URL, DID values, callback
-  settings, Keycloak settings, catalog values.
+- `values.yaml` or ManagementAPI `helm_values`: connector IDs, public endpoint
+  URL, DID values, callback settings, Keycloak settings, catalog values.
+- `configmap.yaml`: legacy Kustomize-only connector settings.
 - `route.yaml`: hostname and gateway namespace/name.
 - `postgres-secret.yaml`: replace the default demo database password for a real
   environment.

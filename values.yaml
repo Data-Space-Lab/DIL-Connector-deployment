@@ -1,0 +1,82 @@
+namespace: dil-connector
+
+image:
+  repository: ghcr.io/data-space-lab/dil-connector
+  tag: latest
+  pullPolicy: Always
+
+imagePullSecrets:
+  - ghcr-pull-secret
+
+connector:
+  replicas: 1
+  connectorId: DIL_CONNECTOR
+  publicHost: dil-connector.example.org
+  publicBaseUrl: https://dil-connector.example.org
+  dspBasePath: /api/dsp
+  auth:
+    provider: json-header-any
+    staticBearerToken: ""
+  callbackHostOverride: ""
+  didResolutionOverrideBaseUrl: ""
+
+catalog:
+  participantId: ""
+  serviceEndpointUrl: ""
+  dataServiceType: dspace:connector
+  seedFile: data/seed.json
+  seedDatasetIds:
+    - CAT0101
+    - CAT0102
+
+dcp:
+  enabled: true
+  holderDid: ""
+  issuerDid: ""
+  verifierDid: ""
+  thirdPartyDid: ""
+  credentialServiceEndpoint: ""
+  issuerServiceEndpoint: ""
+  verifierTriggerEndpoint: ""
+  tokenValidationMode: did-jwt
+  keycloak:
+    introspectionUrl: ""
+    clientId: ""
+    clientSecret: ""
+    verifyTls: true
+
+database:
+  host: dil-connector-postgres
+  port: 5432
+  name: connector
+  username: connector
+  password: connector
+  echo: false
+  storage: 5Gi
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+postgres:
+  image: postgres:16
+  imagePullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+management:
+  enabled: true
+  replicas: 1
+  port: 8283
+
+service:
+  port: 8282

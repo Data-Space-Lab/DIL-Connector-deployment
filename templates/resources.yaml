@@ -71,6 +71,8 @@ data:
       },
       "dsp": {
         "context": "https://w3id.org/dspace/2025/1/context.jsonld",
+        "outboundContractContext": {{ .Values.connector.outboundContractContext | toJson }},
+        "outboundContractNamespace": {{ .Values.connector.outboundContractNamespace | quote }},
         "connectorId": {{ .Values.connector.connectorId | quote }},
         "publicEndpointUrl": {{ printf "%s%s" $publicBaseUrl $dspBasePath | quote }},
         "callbackHostOverride": {{ .Values.connector.callbackHostOverride | quote }},
@@ -201,6 +203,11 @@ metadata:
   namespace: {{ .Values.namespace | quote }}
 spec:
   replicas: {{ .Values.connector.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: dil-connector
@@ -217,6 +224,18 @@ spec:
           env:
             - name: CONNECTOR_SETTINGS_PATH
               value: /app/settings/kubernetes.json
+            - name: DCP_PRIVATE_KEY_PEM
+              valueFrom:
+                secretKeyRef:
+                  name: dil-connector-dcp-key
+                  key: private-key.pem
+                  optional: true
+            - name: DCP_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: dil-connector-dcp-key
+                  key: key-id
+                  optional: true
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -265,6 +284,11 @@ metadata:
   namespace: {{ .Values.namespace | quote }}
 spec:
   replicas: {{ .Values.management.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: dil-connector-management
@@ -288,6 +312,18 @@ spec:
           env:
             - name: CONNECTOR_SETTINGS_PATH
               value: /app/settings/kubernetes.json
+            - name: DCP_PRIVATE_KEY_PEM
+              valueFrom:
+                secretKeyRef:
+                  name: dil-connector-dcp-key
+                  key: private-key.pem
+                  optional: true
+            - name: DCP_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: dil-connector-dcp-key
+                  key: key-id
+                  optional: true
           ports:
             - name: http
               containerPort: {{ .Values.management.port }}

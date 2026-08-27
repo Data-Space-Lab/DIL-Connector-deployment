@@ -5,6 +5,11 @@ metadata:
   namespace: dil-connector
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: dil-connector-management
@@ -28,6 +33,18 @@ spec:
           env:
             - name: CONNECTOR_SETTINGS_PATH
               value: /app/settings/kubernetes.json
+            - name: DCP_PRIVATE_KEY_PEM
+              valueFrom:
+                secretKeyRef:
+                  name: dil-connector-dcp-key
+                  key: private-key.pem
+                  optional: true
+            - name: DCP_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: dil-connector-dcp-key
+                  key: key-id
+                  optional: true
           ports:
             - name: http
               containerPort: 8283
@@ -52,9 +69,11 @@ spec:
             requests:
               cpu: 100m
               memory: 256Mi
+              ephemeral-storage: 128Mi
             limits:
               cpu: 500m
               memory: 512Mi
+              ephemeral-storage: 1Gi
       volumes:
         - name: config
           configMap:

@@ -8,7 +8,7 @@ spec:
     - name: infra
       namespace: infra-gateway
   hostnames:
-    - "connector.dil.collab-cloud.eu"
+    - "dil-connector.material.dil.collab-cloud.eu"
   rules:
     - matches:
         - path:

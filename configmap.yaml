@@ -21,7 +21,7 @@ data:
       "dsp": {
         "context": "https://w3id.org/dspace/2025/1/context.jsonld",
         "connectorId": "DIL_CONNECTOR",
-        "publicEndpointUrl": "http://dil-connector:8282/api/dsp",
+        "publicEndpointUrl": "https://dil-connector.material.dil.collab-cloud.eu/api/dsp",
         "callbackHostOverride": "",
         "protocolBasePaths": [
           "/api/dsp",
@@ -30,8 +30,8 @@ data:
         ]
       },
       "catalog": {
-        "participantId": "DIL_PARTICIPANT",
-        "serviceEndpointUrl": "http://dil-connector:8282/api/dsp",
+        "participantId": "did:web:dil-connector.material.dil.collab-cloud.eu",
+        "serviceEndpointUrl": "https://dil-connector.material.dil.collab-cloud.eu/api/dsp",
         "dataServiceType": "dspace:connector",
         "seedFile": "data/seed.json",
         "rawCatalog": null,
@@ -56,13 +56,13 @@ data:
       },
       "dcp": {
         "enabled": true,
-        "holderDid": "did:web:dil-connector:holder",
-        "issuerDid": "did:web:dil-connector:issuer",
-        "verifierDid": "did:web:dil-connector:verifier",
-        "thirdPartyDid": "did:web:dil-connector:thirdparty",
-        "credentialServiceEndpoint": "http://dil-connector:8282",
-        "issuerServiceEndpoint": "http://dil-connector:8282",
-        "verifierTriggerEndpoint": "http://dil-connector:8282/api/trigger",
+        "holderDid": "did:web:dil-connector.material.dil.collab-cloud.eu",
+        "issuerDid": "did:web:dil-connector.material.dil.collab-cloud.eu:issuer",
+        "verifierDid": "did:web:dil-connector.material.dil.collab-cloud.eu:verifier",
+        "thirdPartyDid": "did:web:dil-connector.material.dil.collab-cloud.eu:thirdparty",
+        "credentialServiceEndpoint": "https://dil-connector.material.dil.collab-cloud.eu",
+        "issuerServiceEndpoint": "https://dil-connector.material.dil.collab-cloud.eu",
+        "verifierTriggerEndpoint": "https://dil-connector.material.dil.collab-cloud.eu/api/trigger",
         "tokenValidationMode": "did-jwt",
         "didResolutionOverrideBaseUrl": "",
         "callbackHostOverride": "",

@@ -21,7 +21,9 @@ spec:
       serviceAccountName: dil-connector
       containers:
         - name: dil-connector-management
-          image: ghcr.io/data-space-lab/dil-connector:latest
+          image:
+            repository: ghcr.io/data-space-lab/dil-connector
+            tag: contract-agreement-iri-20260911
           imagePullPolicy: Always
           command:
             - uvicorn

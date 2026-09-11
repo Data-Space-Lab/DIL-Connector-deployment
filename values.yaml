@@ -14,9 +14,7 @@ connector:
   publicHost: dil-connector.example.org
   publicBaseUrl: https://dil-connector.example.org
   dspBasePath: /api/dsp
-  outboundContractContext:
-    dspace: https://w3id.org/dspace/2025/1/
-    odrl: http://www.w3.org/ns/odrl/2/
+  outboundContractContext: https://w3id.org/dspace/2025/1/context.jsonld
   outboundContractNamespace: https://w3id.org/dspace/2025/1/
   auth:
     provider: json-header-any

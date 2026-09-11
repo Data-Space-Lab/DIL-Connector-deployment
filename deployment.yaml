@@ -21,7 +21,7 @@ spec:
       serviceAccountName: dil-connector
       containers:
         - name: dil-connector
-          image: ghcr.io/data-space-lab/dil-connector:latest
+          image: ghcr.io/data-space-lab/dil-connector:contract-agreement-iri-20260911
           imagePullPolicy: Always
           env:
             - name: CONNECTOR_SETTINGS_PATH

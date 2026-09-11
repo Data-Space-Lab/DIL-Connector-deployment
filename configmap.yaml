@@ -21,10 +21,10 @@ data:
       "dsp": {
         "context": "https://w3id.org/dspace/2025/1/context.jsonld",
         "outboundContractContext": {
-          "dspace": "https://w3id.org/dspace/v0.8/",
+          "dspace": "https://w3id.org/dspace/2025/1/",
           "odrl": "http://www.w3.org/ns/odrl/2/"
         },
-        "outboundContractNamespace": "https://w3id.org/dspace/v0.8/",
+        "outboundContractNamespace": "https://w3id.org/dspace/2025/1/",
         "connectorId": "DIL_CONNECTOR",
         "publicEndpointUrl": "https://dil-connector.material.dil.collab-cloud.eu/api/dsp",
         "callbackHostOverride": "",
@@ -35,7 +35,7 @@ data:
         ]
       },
       "catalog": {
-        "participantId": "did:web:dil-connector.material.dil.collab-cloud.eu",
+        "participantId": "did:web:dil-connector.material.dil.collab-cloud.eu:identity",
         "serviceEndpointUrl": "https://dil-connector.material.dil.collab-cloud.eu/api/dsp",
         "dataServiceType": "dspace:connector",
         "seedFile": "data/seed.json",
@@ -61,7 +61,11 @@ data:
       },
       "dcp": {
         "enabled": true,
-        "holderDid": "did:web:dil-connector.material.dil.collab-cloud.eu",
+        "resetCredentialsOnStartup": false,
+        "seedMembershipCredential": true,
+        "credentialTtlSeconds": 600,
+        "credentialRefreshLeewaySeconds": 60,
+        "holderDid": "did:web:dil-connector.material.dil.collab-cloud.eu:identity",
         "issuerDid": "did:web:dil-connector.material.dil.collab-cloud.eu:issuer",
         "verifierDid": "did:web:dil-connector.material.dil.collab-cloud.eu:verifier",
         "thirdPartyDid": "did:web:dil-connector.material.dil.collab-cloud.eu:thirdparty",

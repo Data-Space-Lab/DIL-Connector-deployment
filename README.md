@@ -47,7 +47,7 @@ For tenant `material`, the catalog entry renders values such as:
 
 ```text
 connector.publicHost=dil-connector.material.dil.collab-cloud.eu
-catalog.participantId=did:web:dil-connector.material.dil.collab-cloud.eu
+catalog.participantId=did:web:dil-connector.material.dil.collab-cloud.eu:identity
 catalog.serviceEndpointUrl=https://dil-connector.material.dil.collab-cloud.eu/api/dsp
 ```
 

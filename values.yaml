@@ -15,9 +15,9 @@ connector:
   publicBaseUrl: https://dil-connector.example.org
   dspBasePath: /api/dsp
   outboundContractContext:
-    dspace: https://w3id.org/dspace/v0.8/
+    dspace: https://w3id.org/dspace/2025/1/
     odrl: http://www.w3.org/ns/odrl/2/
-  outboundContractNamespace: https://w3id.org/dspace/v0.8/
+  outboundContractNamespace: https://w3id.org/dspace/2025/1/
   auth:
     provider: json-header-any
     staticBearerToken: ""
@@ -35,6 +35,10 @@ catalog:
 
 dcp:
   enabled: true
+  resetCredentialsOnStartup: false
+  seedMembershipCredential: true
+  credentialTtlSeconds: 600
+  credentialRefreshLeewaySeconds: 60
   holderDid: ""
   issuerDid: ""
   verifierDid: ""

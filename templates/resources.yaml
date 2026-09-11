@@ -1,6 +1,6 @@
 {{- $publicBaseUrl := trimSuffix "/" .Values.connector.publicBaseUrl -}}
 {{- $dspBasePath := .Values.connector.dspBasePath -}}
-{{- $participantDid := default (printf "did:web:%s" .Values.connector.publicHost) .Values.catalog.participantId -}}
+{{- $participantDid := default (printf "did:web:%s:identity" .Values.connector.publicHost) .Values.catalog.participantId -}}
 {{- $serviceEndpointUrl := default (printf "%s%s" $publicBaseUrl $dspBasePath) .Values.catalog.serviceEndpointUrl -}}
 {{- $holderDid := default $participantDid .Values.dcp.holderDid -}}
 {{- $issuerDid := default (printf "%s:issuer" $participantDid) .Values.dcp.issuerDid -}}
@@ -106,6 +106,10 @@ data:
       },
       "dcp": {
         "enabled": {{ .Values.dcp.enabled }},
+        "resetCredentialsOnStartup": {{ .Values.dcp.resetCredentialsOnStartup }},
+        "seedMembershipCredential": {{ .Values.dcp.seedMembershipCredential }},
+        "credentialTtlSeconds": {{ .Values.dcp.credentialTtlSeconds }},
+        "credentialRefreshLeewaySeconds": {{ .Values.dcp.credentialRefreshLeewaySeconds }},
         "holderDid": {{ $holderDid | quote }},
         "issuerDid": {{ $issuerDid | quote }},
         "verifierDid": {{ $verifierDid | quote }},

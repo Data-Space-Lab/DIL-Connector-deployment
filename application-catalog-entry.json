@@ -7,7 +7,7 @@
   "path": ".",
   "namespace": "dil-connector",
   "enabled": true,
-  "helm_values": "connector:\n  publicHost: dil-connector.{tenant_host}\n  publicBaseUrl: https://dil-connector.{tenant_host}\ncatalog:\n  participantId: did:web:dil-connector.{tenant_host}:identity\n  serviceEndpointUrl: https://dil-connector.{tenant_host}/api/dsp\ndcp:\n  holderDid: did:web:dil-connector.{tenant_host}:identity\n  issuerDid: did:web:dil-connector.{tenant_host}:issuer\n  verifierDid: did:web:dil-connector.{tenant_host}:verifier\n  thirdPartyDid: did:web:dil-connector.{tenant_host}:thirdparty\n  credentialServiceEndpoint: https://dil-connector.{tenant_host}\n  issuerServiceEndpoint: https://dil-connector.{tenant_host}\n  verifierTriggerEndpoint: https://dil-connector.{tenant_host}/api/trigger\n",
+  "helm_values": "image:\n  repository: ghcr.io/data-space-lab/dil-connector\n  tag: contract-agreement-iri-20260911\n  pullPolicy: Always\nconnector:\n  publicHost: dil-connector.{tenant_host}\n  publicBaseUrl: https://dil-connector.{tenant_host}\ncatalog:\n  participantId: did:web:dil-connector.{tenant_host}:identity\n  serviceEndpointUrl: https://dil-connector.{tenant_host}/api/dsp\ndcp:\n  holderDid: did:web:dil-connector.{tenant_host}:identity\n  issuerDid: did:web:dil-connector.{tenant_host}:issuer\n  verifierDid: did:web:dil-connector.{tenant_host}:verifier\n  thirdPartyDid: did:web:dil-connector.{tenant_host}:thirdparty\n  credentialServiceEndpoint: https://dil-connector.{tenant_host}\n  issuerServiceEndpoint: https://dil-connector.{tenant_host}\n  verifierTriggerEndpoint: https://dil-connector.{tenant_host}/api/trigger\n",
   "routes": [
     {
       "route_name": "dil-connector",

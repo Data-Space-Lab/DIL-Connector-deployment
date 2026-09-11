@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: messaging-fix
+  tag: agreementID-fix
   pullPolicy: Always
 
 imagePullSecrets:

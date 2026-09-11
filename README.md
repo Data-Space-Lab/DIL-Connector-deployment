@@ -1,6 +1,6 @@
 # DIL Connector Deployment
 
-Helm, Kustomize, and Argo CD manifests for deploying the DIL Connector from:
+Helm and Argo CD manifests for deploying the DIL Connector from:
 
 ```text
 ghcr.io/data-space-lab/dil-connector:latest
@@ -64,12 +64,6 @@ helm upgrade --install dil-connector . \
   --set connector.publicBaseUrl=https://dil-connector.example.org
 ```
 
-## Deploy With Kustomize
-
-```bash
-kubectl apply -k .
-```
-
 ## Deploy With ArgoCD
 
 Push this folder to GitHub, then update `argocd-application.yaml`:
@@ -86,13 +80,14 @@ kubectl apply -f argocd-application.yaml
 
 ## Things To Adjust
 
-- `values.yaml` or ManagementAPI `helm_values`: connector IDs, public endpoint
-  URL, DID values, callback settings, Keycloak settings, catalog values.
+- `values.yaml` or ManagementAPI `helm_values`: connector image tag, connector
+  IDs, public endpoint URL, DID values, callback settings, Keycloak settings,
+  and catalog values. The connector and management API use the same
+  `image.tag`; update it only here.
 - `dataplane.rcloneEnabled`: set to `true` only after rclone remotes and
   credentials are mounted/configured for the tenant.
-- `configmap.yaml`: legacy Kustomize-only connector settings.
-- `route.yaml`: hostname and gateway namespace/name.
-- `postgres-secret.yaml`: replace the default demo database password for a real
+- Routes are created by ManagementAPI from the application catalog entry.
+- Replace the default demo database password in `values.yaml` for a real
   environment.
 
 Do not commit real GHCR tokens or production database passwords to Git.

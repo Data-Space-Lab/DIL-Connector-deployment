@@ -397,6 +397,8 @@ metadata:
   namespace: {{ .Values.namespace | quote }}
 spec:
   replicas: {{ .Values.dataplane.replicas }}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: dil-connector-dataplane

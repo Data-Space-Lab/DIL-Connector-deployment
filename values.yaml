@@ -96,7 +96,7 @@ dataplane:
   enabled: true
   image:
     repository: ghcr.io/data-space-lab/dil-connector-dataplane
-    tag: s3-isolated-20260917-1
+    tag: adapter-config-20260917-1
     pullPolicy: Always
   replicas: 1
   port: 8284
@@ -104,6 +104,11 @@ dataplane:
   # Optional Secret containing an rclone.conf key.
   rcloneConfigSecret: ""
   opcuaEnabled: false
+  configStorage:
+    enabled: true
+    path: /data/dataplane-config.json
+    size: 1Gi
+    storageClassName: ""
 
 service:
   port: 8282

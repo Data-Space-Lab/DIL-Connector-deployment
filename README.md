@@ -89,6 +89,11 @@ kubectl apply -f argocd-application.yaml
 - `dataplane.rcloneConfigSecret`: optional Kubernetes Secret name. The Secret
   must contain a `rclone.conf` key; the chart mounts it at
   `/root/.config/rclone/rclone.conf`.
+- `dataplane.configStorage`: enables the persistent volume used by the GUI's
+  Dataplane Config page. Native S3/MinIO connection settings are stored in
+  `/data/dataplane-config.json`; secret values are not returned by the
+  dataplane API. The default `1Gi` volume uses the cluster's default storage
+  class, or set `dataplane.configStorage.storageClassName` explicitly.
 
 To enable `s3-copy` through rclone, create the config Secret in the connector
 namespace and set both values before committing/syncing the chart:

@@ -373,6 +373,23 @@ spec:
 {{- end }}
 {{- if .Values.dataplane.enabled }}
 ---
+{{- if .Values.dataplane.configStorage.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dil-connector-dataplane-config
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.dataplane.configStorage.size | quote }}
+{{- if .Values.dataplane.configStorage.storageClassName }}
+  storageClassName: {{ .Values.dataplane.configStorage.storageClassName | quote }}
+{{- end }}
+---
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -405,11 +422,19 @@ spec:
               value: {{ .Values.dataplane.rcloneEnabled | quote }}
             - name: DATAPLANE_OPCUA_ENABLED
               value: {{ .Values.dataplane.opcuaEnabled | quote }}
-{{- if .Values.dataplane.rcloneConfigSecret }}
+            - name: DATAPLANE_CONFIG_PATH
+              value: {{ .Values.dataplane.configStorage.path | quote }}
+{{- if or .Values.dataplane.configStorage.enabled .Values.dataplane.rcloneConfigSecret }}
           volumeMounts:
+{{- if .Values.dataplane.configStorage.enabled }}
+            - name: config-data
+              mountPath: /data
+{{- end }}
+{{- if .Values.dataplane.rcloneConfigSecret }}
             - name: rclone-config
               mountPath: /root/.config/rclone
               readOnly: true
+{{- end }}
 {{- end }}
           ports:
             - name: http
@@ -428,14 +453,21 @@ spec:
             periodSeconds: 20
           resources:
 {{ toYaml .Values.resources | indent 12 }}
-{{- if .Values.dataplane.rcloneConfigSecret }}
+{{- if or .Values.dataplane.configStorage.enabled .Values.dataplane.rcloneConfigSecret }}
       volumes:
+{{- if .Values.dataplane.configStorage.enabled }}
+        - name: config-data
+          persistentVolumeClaim:
+            claimName: dil-connector-dataplane-config
+{{- end }}
+{{- if .Values.dataplane.rcloneConfigSecret }}
         - name: rclone-config
           secret:
             secretName: {{ .Values.dataplane.rcloneConfigSecret | quote }}
             items:
               - key: rclone.conf
                 path: rclone.conf
+{{- end }}
 {{- end }}
 ---
 apiVersion: v1

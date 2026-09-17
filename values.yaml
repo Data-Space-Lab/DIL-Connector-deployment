@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: dps-provider-address-20260917-1
+  tag: callback-address-dynamic-20260917-1
   pullPolicy: Always
 
 imagePullSecrets:

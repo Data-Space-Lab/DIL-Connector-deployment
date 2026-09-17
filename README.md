@@ -86,6 +86,35 @@ kubectl apply -f argocd-application.yaml
   `image.tag`; update it only here.
 - `dataplane.rcloneEnabled`: set to `true` only after rclone remotes and
   credentials are mounted/configured for the tenant.
+- `dataplane.rcloneConfigSecret`: optional Kubernetes Secret name. The Secret
+  must contain a `rclone.conf` key; the chart mounts it at
+  `/root/.config/rclone/rclone.conf`.
+
+To enable `s3-copy` through rclone, create the config Secret in the connector
+namespace and set both values before committing/syncing the chart:
+
+```bash
+rclone config create material-minio s3 provider Minio \
+  endpoint https://minio-api.material.dil.collab-cloud.eu \
+  access_key_id '<access-key>' \
+  secret_access_key '<secret-key>'
+rclone config file
+
+kubectl -n dil-connector create secret generic dil-connector-rclone-config \
+  --from-file=rclone.conf="$HOME/.config/rclone/rclone.conf" \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Then configure:
+
+```yaml
+dataplane:
+  rcloneEnabled: true
+  rcloneConfigSecret: dil-connector-rclone-config
+```
+
+After Argo CD syncs, verify the pod has the remote with:
+`kubectl -n dil-connector exec deploy/dil-connector-dataplane -- rclone listremotes`.
 - `dsp.providerDataAddresses`: configure the provider source address for each
   transfer profile used by an EDC consumer. For `s3-copy`, the EDC dataplane
   expects the provider to return an `AmazonS3` DataAddress in the DSP

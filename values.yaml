@@ -101,6 +101,8 @@ dataplane:
   replicas: 1
   port: 8284
   rcloneEnabled: false
+  # Optional Secret containing an rclone.conf key.
+  rcloneConfigSecret: ""
   opcuaEnabled: false
 
 service:

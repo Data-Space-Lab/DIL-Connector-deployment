@@ -405,6 +405,12 @@ spec:
               value: {{ .Values.dataplane.rcloneEnabled | quote }}
             - name: DATAPLANE_OPCUA_ENABLED
               value: {{ .Values.dataplane.opcuaEnabled | quote }}
+{{- if .Values.dataplane.rcloneConfigSecret }}
+          volumeMounts:
+            - name: rclone-config
+              mountPath: /root/.config/rclone
+              readOnly: true
+{{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.dataplane.port }}
@@ -422,6 +428,15 @@ spec:
             periodSeconds: 20
           resources:
 {{ toYaml .Values.resources | indent 12 }}
+{{- if .Values.dataplane.rcloneConfigSecret }}
+      volumes:
+        - name: rclone-config
+          secret:
+            secretName: {{ .Values.dataplane.rcloneConfigSecret | quote }}
+            items:
+              - key: rclone.conf
+                path: rclone.conf
+{{- end }}
 ---
 apiVersion: v1
 kind: Service

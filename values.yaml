@@ -100,6 +100,9 @@ dataplane:
     pullPolicy: Always
   replicas: 1
   port: 8284
+  # Material's vcluster currently has a stale Longhorn mount on dil-node5.
+  # Leave empty in other clusters to let Kubernetes schedule normally.
+  nodeName: dil-node4.collab-cloud.eu
   rcloneEnabled: false
   # Optional Secret containing an rclone.conf key.
   rcloneConfigSecret: ""

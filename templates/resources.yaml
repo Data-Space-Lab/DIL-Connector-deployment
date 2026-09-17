@@ -408,6 +408,9 @@ spec:
         app: dil-connector-dataplane
     spec:
       serviceAccountName: dil-connector
+{{- if .Values.dataplane.nodeName }}
+      nodeName: {{ .Values.dataplane.nodeName | quote }}
+{{- end }}
       containers:
         - name: dil-connector-dataplane
           image: "{{ .Values.dataplane.image.repository }}:{{ .Values.dataplane.image.tag }}"

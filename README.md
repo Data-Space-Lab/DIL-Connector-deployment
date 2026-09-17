@@ -84,8 +84,11 @@ kubectl apply -f argocd-application.yaml
   IDs, public endpoint URL, DID values, callback settings, Keycloak settings,
   and catalog values. The connector and management API use the same
   `image.tag`; update it only here.
-- `dataplane.rcloneEnabled`: set to `true` only after rclone remotes and
-  credentials are mounted/configured for the tenant.
+- `dataplane.rcloneEnabled`: enables the rclone adapter. The default image
+  contains the rclone binary, and the S3-compatible remote can be configured
+  from the GUI's **Dataplane Config** page.
+- `dataplane.rcloneConfigPath`: path for the generated rclone configuration;
+  it must be on the persistent dataplane config volume.
 - `dataplane.rcloneConfigSecret`: optional Kubernetes Secret name. The Secret
   must contain a `rclone.conf` key; the chart mounts it at
   `/root/.config/rclone/rclone.conf`.
@@ -97,6 +100,14 @@ kubectl apply -f argocd-application.yaml
 
 To enable `s3-copy` through rclone, create the config Secret in the connector
 namespace and set both values before committing/syncing the chart:
+
+The preferred method is the GUI. Open **Dataplane Config**, select `rclone`,
+enter the MinIO endpoint, remote name, region, and credentials, then use
+**Verify connection** followed by **Save configuration**. Source data objects
+can then use a remote such as `tenant-minio:dil-data/demo.csv`.
+
+For advanced deployments with multiple remotes, the optional Secret method
+remains supported:
 
 ```bash
 rclone config create material-minio s3 provider Minio \

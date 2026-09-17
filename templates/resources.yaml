@@ -429,6 +429,8 @@ spec:
               value: {{ .Values.dataplane.opcuaEnabled | quote }}
             - name: DATAPLANE_CONFIG_PATH
               value: {{ .Values.dataplane.configStorage.path | quote }}
+            - name: DATAPLANE_RCLONE_CONFIG_PATH
+              value: {{ .Values.dataplane.rcloneConfigPath | quote }}
 {{- if or .Values.dataplane.configStorage.enabled .Values.dataplane.rcloneConfigSecret }}
           volumeMounts:
 {{- if .Values.dataplane.configStorage.enabled }}

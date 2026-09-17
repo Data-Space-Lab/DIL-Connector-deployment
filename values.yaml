@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: dynamic-schema-verify-20260917-1
+  tag: dps-provider-address-20260917-1
   pullPolicy: Always
 
 imagePullSecrets:
@@ -26,7 +26,13 @@ connector:
 # profile. Use a native EDC address (type/endpoint plus S3 properties); the
 # connector converts it to the DSP DataAddress representation on TransferStart.
 dsp:
+  providerFlows: {}
   providerDataAddresses: {}
+
+dataPlane:
+  # Internal service URL used by the connector to prepare provider addresses.
+  baseUrl: http://dil-connector-dataplane:8284
+  timeoutSeconds: 10
 
 catalog:
   participantId: ""
@@ -96,7 +102,7 @@ dataplane:
   enabled: true
   image:
     repository: ghcr.io/data-space-lab/dil-connector-dataplane
-    tag: rclone-gui-20260917-1
+    tag: dps-provider-address-20260917-1
     pullPolicy: Always
   replicas: 1
   port: 8284

@@ -69,6 +69,10 @@ data:
         "provider": {{ .Values.connector.auth.provider | quote }},
         "staticBearerToken": {{ .Values.connector.auth.staticBearerToken | quote }}
       },
+      "dataPlane": {
+        "baseUrl": {{ .Values.dataPlane.baseUrl | quote }},
+        "timeoutSeconds": {{ .Values.dataPlane.timeoutSeconds }}
+      },
       "dsp": {
         "context": "https://w3id.org/dspace/2025/1/context.jsonld",
         "outboundContractContext": {{ .Values.connector.outboundContractContext | toJson }},
@@ -80,7 +84,9 @@ data:
           "/api/dsp",
           "/api/v1/dsp/2025/1",
           "/api/v1/dsp/<version>"
-        ]
+        ],
+        "providerFlows": {{ .Values.dsp.providerFlows | toJson }},
+        "providerDataAddresses": {{ .Values.dsp.providerDataAddresses | toJson }}
       },
       "catalog": {
         "participantId": {{ $participantDid | quote }},
@@ -93,8 +99,7 @@ data:
       "contract": {
         "flowDelayMs": 180,
         "consumerFlows": {},
-        "providerFlows": {},
-        "providerDataAddresses": {{ .Values.dsp.providerDataAddresses | toJson }}
+        "providerFlows": {}
       },
       "metadata": {
         "protocolVersions": [

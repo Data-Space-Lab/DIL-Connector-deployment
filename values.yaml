@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: callback-address-dynamic-20260917-1
+  tag: transfer-dcp-auth-20260917-1
   pullPolicy: Always
 
 imagePullSecrets:

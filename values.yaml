@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: agreementID-fix
+  tag: dsp-s3-source-20260917-1
   pullPolicy: Always
 
 imagePullSecrets:
@@ -21,6 +21,12 @@ connector:
     staticBearerToken: ""
   callbackHostOverride: ""
   didResolutionOverrideBaseUrl: ""
+
+# Optional provider-side source addresses keyed by the requested DSP transfer
+# profile. Use a native EDC address (type/endpoint plus S3 properties); the
+# connector converts it to the DSP DataAddress representation on TransferStart.
+dsp:
+  providerDataAddresses: {}
 
 catalog:
   participantId: ""

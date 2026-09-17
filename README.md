@@ -86,6 +86,30 @@ kubectl apply -f argocd-application.yaml
   `image.tag`; update it only here.
 - `dataplane.rcloneEnabled`: set to `true` only after rclone remotes and
   credentials are mounted/configured for the tenant.
+- `dsp.providerDataAddresses`: configure the provider source address for each
+  transfer profile used by an EDC consumer. For `s3-copy`, the EDC dataplane
+  expects the provider to return an `AmazonS3` DataAddress in the DSP
+  `TransferStartMessage`. Example values (replace the endpoint and credentials
+  with tenant-specific values):
+
+  ```yaml
+  dsp:
+    providerDataAddresses:
+      s3-copy:
+        type: AmazonS3
+        endpoint: https://minio-api.material.dil.collab-cloud.eu
+        bucketName: dil-data
+        objectName: demo.csv
+        region: us-east-1
+        accessKeyId: REPLACE_WITH_READ_ONLY_KEY
+        secretAccessKey: REPLACE_WITH_READ_ONLY_SECRET
+  ```
+
+  Do not commit real object-storage credentials to Git or a ConfigMap. Use the
+  deployment platform's secret-to-values mechanism, or make the source bucket
+  publicly readable where appropriate. The DIL catalog may continue to expose
+  its internal `RcloneData` description; the provider transfer flow translates
+  the configured source into the native EDC address required on the wire.
 - Routes are created by ManagementAPI from the application catalog entry.
 - Replace the default demo database password in `values.yaml` for a real
   environment.

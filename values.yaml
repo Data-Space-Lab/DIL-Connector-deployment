@@ -33,6 +33,9 @@ dataPlane:
   # Internal service URL used by the connector to prepare provider addresses.
   baseUrl: http://dil-connector-dataplane:8284
   timeoutSeconds: 10
+  # Authenticated/non-GET HTTP sources use the connector's public DSP URL as
+  # a short-lived provider proxy. This is derived automatically in the
+  # dataplane Deployment from connector.publicBaseUrl and connector.dspBasePath.
 
 catalog:
   participantId: ""

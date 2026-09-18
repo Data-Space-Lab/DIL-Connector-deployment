@@ -436,6 +436,8 @@ spec:
               value: {{ .Values.dataplane.configStorage.path | quote }}
             - name: DATAPLANE_RCLONE_CONFIG_PATH
               value: {{ .Values.dataplane.rcloneConfigPath | quote }}
+            - name: DATAPLANE_PUBLIC_PROXY_BASE_URL
+              value: {{ printf "%s%s" $publicBaseUrl $dspBasePath | quote }}
 {{- if or .Values.dataplane.configStorage.enabled .Values.dataplane.rcloneConfigSecret }}
           volumeMounts:
 {{- if .Values.dataplane.configStorage.enabled }}

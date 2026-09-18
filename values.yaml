@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: remote-offer-cleanup-20260918-2
+  tag: dataset-draft-20260918-1
   pullPolicy: Always
 
 imagePullSecrets:

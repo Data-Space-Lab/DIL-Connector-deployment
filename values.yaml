@@ -105,7 +105,7 @@ dataplane:
   enabled: true
   image:
     repository: ghcr.io/data-space-lab/dil-connector-dataplane
-    tag: http-rest-proxy-20260918-1
+    tag: resource-discovery-20260918-1
     pullPolicy: Always
   replicas: 1
   port: 8284

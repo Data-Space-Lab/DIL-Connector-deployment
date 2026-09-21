@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: reject-callback-best-effort-20260918-1
+  tag: contract-flow-20260921-1
   pullPolicy: Always
 
 imagePullSecrets:

@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: policy-editor-20260921-1
+  tag: mcp-streamable-20260922-1
   pullPolicy: Always
 
 imagePullSecrets:

@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: ed25519-dual-20260923-1
+  tag: multi-dataspace-20260923-1
   pullPolicy: Always
 
 imagePullSecrets:

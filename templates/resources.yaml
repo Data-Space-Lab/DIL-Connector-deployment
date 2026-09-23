@@ -124,6 +124,8 @@ data:
         "issuerServiceEndpoint": {{ $issuerServiceEndpoint | quote }},
         "verifierTriggerEndpoint": {{ $verifierTriggerEndpoint | quote }},
         "tokenValidationMode": {{ .Values.dcp.tokenValidationMode | quote }},
+        "keyAlgorithms": {{ .Values.dcp.keyAlgorithms | toJson }},
+        "signingAlgorithm": {{ .Values.dcp.signingAlgorithm | quote }},
         "didResolutionOverrideBaseUrl": {{ .Values.connector.didResolutionOverrideBaseUrl | quote }},
         "callbackHostOverride": {{ .Values.connector.callbackHostOverride | quote }},
         "keycloak": {
@@ -248,6 +250,18 @@ spec:
                   name: dil-connector-dcp-key
                   key: key-id
                   optional: true
+            - name: DCP_ED25519_PRIVATE_KEY_PEM
+              valueFrom:
+                secretKeyRef:
+                  name: dil-connector-dcp-key
+                  key: ed25519-private-key.pem
+                  optional: true
+            - name: DCP_ED25519_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: dil-connector-dcp-key
+                  key: ed25519-key-id
+                  optional: true
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -335,6 +349,18 @@ spec:
                 secretKeyRef:
                   name: dil-connector-dcp-key
                   key: key-id
+                  optional: true
+            - name: DCP_ED25519_PRIVATE_KEY_PEM
+              valueFrom:
+                secretKeyRef:
+                  name: dil-connector-dcp-key
+                  key: ed25519-private-key.pem
+                  optional: true
+            - name: DCP_ED25519_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: dil-connector-dcp-key
+                  key: ed25519-key-id
                   optional: true
           ports:
             - name: http

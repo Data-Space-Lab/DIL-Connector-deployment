@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: multi-dataspace-20260923-1
+  tag: dcp-catalog-auth-20260923-1
   pullPolicy: Always
 
 imagePullSecrets:

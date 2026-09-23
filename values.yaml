@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: ed25519-alias-20260923-1
+  tag: credential-service-route-20260923-1
   pullPolicy: Always
 
 imagePullSecrets:

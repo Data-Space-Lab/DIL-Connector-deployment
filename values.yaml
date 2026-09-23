@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: dcp-token-diagnostics-20260923-1
+  tag: dcp-dataspace-audience-20260923-1
   pullPolicy: Always
 
 imagePullSecrets:

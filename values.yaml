@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: catalog-visibility-20260923-1
+  tag: ed25519-alias-20260923-1
   pullPolicy: Always
 
 imagePullSecrets:

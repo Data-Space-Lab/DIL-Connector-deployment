@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: credential-service-route-20260923-1
+  tag: dcp-token-diagnostics-20260923-1
   pullPolicy: Always
 
 imagePullSecrets:

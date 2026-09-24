@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: catalog-denial-20260924-1
+  tag: contract-dataspace-scope-20260924-1
   pullPolicy: Always
 
 imagePullSecrets:

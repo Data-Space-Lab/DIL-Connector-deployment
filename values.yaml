@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: dcp-holder-issuance-20260924-3
+  tag: dcp-callback-20260924-1
   pullPolicy: Always
 
 imagePullSecrets:

@@ -111,6 +111,8 @@ data:
         ]
       },
       "dcp": {
+        "didResolutionTimeoutSeconds": {{ .Values.dcp.didResolutionTimeoutSeconds }},
+        "didDocumentCacheTtlSeconds": {{ .Values.dcp.didDocumentCacheTtlSeconds }},
         "enabled": {{ .Values.dcp.enabled }},
         "resetCredentialsOnStartup": {{ .Values.dcp.resetCredentialsOnStartup }},
         "seedMembershipCredential": {{ .Values.dcp.seedMembershipCredential }},

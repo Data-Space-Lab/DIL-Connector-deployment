@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: did-purpose-20260924-1
+  tag: did-cache-20260924-1
   pullPolicy: Always
 
 imagePullSecrets:
@@ -52,6 +52,8 @@ catalog:
     - CAT0102
 
 dcp:
+  didResolutionTimeoutSeconds: 10
+  didDocumentCacheTtlSeconds: 0
   enabled: true
   resetCredentialsOnStartup: false
   seedMembershipCredential: true

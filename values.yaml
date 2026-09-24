@@ -29,6 +29,11 @@ dsp:
   providerFlows: {}
   providerDataAddresses: {}
 
+contract:
+  # Optional per-dataset overrides. A valid provider request sends an offer
+  # automatically when no INITIAL_REQUEST/REQUESTED override is configured.
+  providerFlows: {}
+
 dataPlane:
   # Internal service URL used by the connector to prepare provider addresses.
   baseUrl: http://dil-connector-dataplane:8284

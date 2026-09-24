@@ -99,7 +99,7 @@ data:
       "contract": {
         "flowDelayMs": 180,
         "consumerFlows": {},
-        "providerFlows": {}
+        "providerFlows": {{ .Values.contract.providerFlows | toJson }}
       },
       "metadata": {
         "protocolVersions": [

@@ -155,6 +155,13 @@ After Argo CD syncs, verify the pod has the remote with:
   publicly readable where appropriate. The DIL catalog may continue to expose
   its internal `RcloneData` description; the provider transfer flow translates
   the configured source into the native EDC address required on the wire.
+- For DCP credential issuance, the connector must keep a stable private key
+  matching the public JWK published in its DID document. Create the optional
+  `dil-connector-dcp-key` Secret with `private-key.pem` and `key-id` for ES256,
+  and/or `ed25519-private-key.pem` and `ed25519-key-id` for EdDSA. The chart
+  mounts these values into both connector processes. Without the Secret, keys
+  are generated in memory and a restart can make the published DID key and
+  outgoing DCP signature disagree.
 - Routes are created by ManagementAPI from the application catalog entry.
 - Replace the default demo database password in `values.yaml` for a real
   environment.

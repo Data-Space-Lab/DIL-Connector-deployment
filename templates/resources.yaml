@@ -338,6 +338,12 @@ spec:
             - --port
             - {{ .Values.management.port | quote }}
           env:
+            - name: DATAPLANE_CONTROL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.dataPlane.authorizationSecret | quote }}
+                  key: control-token
+                  optional: true
             - name: CONNECTOR_SETTINGS_PATH
               value: /app/settings/kubernetes.json
             - name: DCP_PRIVATE_KEY_PEM
@@ -456,6 +462,22 @@ spec:
             - --port
             - {{ .Values.dataplane.port | quote }}
           env:
+            - name: DATAPLANE_CONNECTOR_URL
+              value: {{ printf "http://dil-connector-management:%v" .Values.management.port | quote }}
+            - name: DATAPLANE_CONTROL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.dataPlane.authorizationSecret | quote }}
+                  key: control-token
+                  optional: true
+            - name: GRAFANA_CLIENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.dataPlane.authorizationSecret | quote }}
+                  key: grafana-client-token
+                  optional: true
+            - name: GRAFANA_AUDIT_DB
+              value: {{ .Values.dataplane.grafanaAuditDb | quote }}
             - name: DATAPLANE_RCLONE_ENABLED
               value: {{ .Values.dataplane.rcloneEnabled | quote }}
             - name: DATAPLANE_OPCUA_ENABLED

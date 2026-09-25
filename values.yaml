@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: logs-20260925-1
+  tag: grafana-20260925-1
   pullPolicy: Always
 
 imagePullSecrets:
@@ -35,6 +35,8 @@ contract:
   providerFlows: {}
 
 dataPlane:
+  # Provision externally; missing keys leave Grafana authorization disabled.
+  authorizationSecret: dil-connector-dataplane-auth
   # Internal service URL used by the connector to prepare provider addresses.
   baseUrl: http://dil-connector-dataplane:8284
   timeoutSeconds: 10
@@ -116,10 +118,11 @@ dataplane:
   enabled: true
   image:
     repository: ghcr.io/data-space-lab/dil-connector-dataplane
-    tag: content-http-20260925-2
+    tag: grafana-20260925-1
     pullPolicy: Always
   replicas: 1
   port: 8284
+  grafanaAuditDb: /data/grafana-query-events.sqlite3
   # Material's vcluster currently has a stale Longhorn mount on dil-node5.
   # Leave empty in other clusters to let Kubernetes schedule normally.
   nodeName: dil-node4.collab-cloud.eu

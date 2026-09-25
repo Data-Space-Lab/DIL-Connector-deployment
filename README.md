@@ -167,3 +167,31 @@ After Argo CD syncs, verify the pod has the remote with:
   environment.
 
 Do not commit real GHCR tokens or production database passwords to Git.
+# Grafana dataplane authorization
+
+The Grafana adapter uses a private management authorization endpoint, not a DSP
+extension. Before enabling Grafana queries, create the Secret named by
+`dataPlane.authorizationSecret` (default `dil-connector-dataplane-auth`):
+
+```bash
+kubectl -n dil-connector create secret generic dil-connector-dataplane-auth \
+  --from-literal=control-token="$(openssl rand -hex 32)" \
+  --from-literal=grafana-client-token="$(openssl rand -hex 32)"
+```
+
+Keep these values out of Git. Missing keys disable Grafana authorization while
+existing adapters remain available. The control token is shared only between the
+management service and dataplane. The separate Grafana client token belongs in
+the consuming Grafana plugin's secure datasource configuration. Restart the two
+deployments after rotating the Secret.
+
+Configure the Grafana adapter through Settings > Dataplanes with the provider
+Grafana URL, restricted service-account token, allowed datasource UIDs, and public
+query URL. Route only `/grafana/provider/` and, where required, `/grafana/consumer/`
+to dataplane port 8284 without rewriting their paths. Never expose dataplane
+administrative routes or management `/internal/data-plane/` publicly.
+
+Query auditing uses `dataplane.grafanaAuditDb` on the existing `/data` PVC. Keep
+one dataplane replica/worker for SQLite auditing and process-local rate limits.
+Grafana queries require a FINALIZED agreement and STARTED transfer. Installing
+the images alone does not configure a provider Grafana service or public routes.

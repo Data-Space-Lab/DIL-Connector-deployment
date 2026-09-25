@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: content-diagnostics-20260925-1
+  tag: agreement-lookup-20260925-1
   pullPolicy: Always
 
 imagePullSecrets:

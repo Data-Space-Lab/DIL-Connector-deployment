@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: terminate-contract-20260925-1
+  tag: terminate-finalized-20260925-1
   pullPolicy: Always
 
 imagePullSecrets:

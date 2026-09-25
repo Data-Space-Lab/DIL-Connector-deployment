@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: discover-audit-20260925-1
+  tag: logs-20260925-1
   pullPolicy: Always
 
 imagePullSecrets:

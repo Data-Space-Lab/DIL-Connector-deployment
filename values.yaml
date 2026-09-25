@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: contract-context-20260924-2
+  tag: transfer-browser-20260925-1
   pullPolicy: Always
 
 imagePullSecrets:
@@ -116,7 +116,7 @@ dataplane:
   enabled: true
   image:
     repository: ghcr.io/data-space-lab/dil-connector-dataplane
-    tag: resource-discovery-20260918-1
+    tag: transfer-browser-20260925-1
     pullPolicy: Always
   replicas: 1
   port: 8284

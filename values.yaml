@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: grafana-transfer-errors-20260925-1
+  tag: grafana-content-access-20260925-1
   pullPolicy: Always
 
 imagePullSecrets:

@@ -241,6 +241,12 @@ spec:
           env:
             - name: CONNECTOR_SETTINGS_PATH
               value: /app/settings/kubernetes.json
+            - name: DATAPLANE_CONTROL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.dataPlane.authorizationSecret | quote }}
+                  key: control-token
+                  optional: true
             - name: DCP_PRIVATE_KEY_PEM
               valueFrom:
                 secretKeyRef:

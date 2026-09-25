@@ -1,5 +1,6 @@
 {{- $publicBaseUrl := trimSuffix "/" .Values.connector.publicBaseUrl -}}
 {{- $dspBasePath := .Values.connector.dspBasePath -}}
+{{- $grafanaPublicQueryUrl := printf "%s/grafana/provider" $publicBaseUrl -}}
 {{- $participantDid := default (printf "did:web:%s:identity" .Values.connector.publicHost) .Values.catalog.participantId -}}
 {{- $serviceEndpointUrl := default (printf "%s%s" $publicBaseUrl $dspBasePath) .Values.catalog.serviceEndpointUrl -}}
 {{- $holderDid := default $participantDid .Values.dcp.holderDid -}}
@@ -488,6 +489,8 @@ spec:
               value: {{ .Values.dataplane.rcloneConfigPath | quote }}
             - name: DATAPLANE_PUBLIC_PROXY_BASE_URL
               value: {{ printf "%s%s" $publicBaseUrl $dspBasePath | quote }}
+            - name: DATAPLANE_PUBLIC_QUERY_URL
+              value: {{ $grafanaPublicQueryUrl | quote }}
 {{- if or .Values.dataplane.configStorage.enabled .Values.dataplane.rcloneConfigSecret }}
           volumeMounts:
 {{- if .Values.dataplane.configStorage.enabled }}

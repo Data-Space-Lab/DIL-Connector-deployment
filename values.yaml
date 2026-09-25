@@ -118,7 +118,7 @@ dataplane:
   enabled: true
   image:
     repository: ghcr.io/data-space-lab/dil-connector-dataplane
-    tag: grafana-20260925-2
+    tag: grafana-20260925-3
     pullPolicy: Always
   replicas: 1
   port: 8284

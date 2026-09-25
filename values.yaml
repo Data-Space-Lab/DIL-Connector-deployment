@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: grafana-20260925-1
+  tag: grafana-dashboard-20260925-1
   pullPolicy: Always
 
 imagePullSecrets:
@@ -118,7 +118,7 @@ dataplane:
   enabled: true
   image:
     repository: ghcr.io/data-space-lab/dil-connector-dataplane
-    tag: grafana-20260925-3
+    tag: grafana-dashboard-20260925-1
     pullPolicy: Always
   replicas: 1
   port: 8284

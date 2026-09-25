@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: transfer-browser-20260925-1
+  tag: discover-audit-20260925-1
   pullPolicy: Always
 
 imagePullSecrets:

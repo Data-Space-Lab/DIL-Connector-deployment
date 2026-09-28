@@ -48,10 +48,9 @@ catalog:
   participantId: ""
   serviceEndpointUrl: ""
   dataServiceType: dspace:connector
-  seedFile: data/seed.json
-  seedDatasetIds:
-    - CAT0101
-    - CAT0102
+  # Production connectors must not load the TCK catalog fixture.
+  seedFile: ""
+  seedDatasetIds: []
 
 dcp:
   didResolutionTimeoutSeconds: 10

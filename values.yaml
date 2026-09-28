@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: provider-agreement-persist-20260925-1
+  tag: rtsp-consumer-relay-20260928-1
   pullPolicy: Always
 
 imagePullSecrets:

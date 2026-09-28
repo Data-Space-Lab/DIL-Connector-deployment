@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: rtsp-consumer-relay-20260928-1
+  tag: rtsp-transfer-callback-race-20260928-1
   pullPolicy: Always
 
 imagePullSecrets:

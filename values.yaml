@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: payment-policy-20260929-1
+  tag: payment-config-20260929-1
   pullPolicy: Always
 
 imagePullSecrets:

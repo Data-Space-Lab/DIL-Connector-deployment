@@ -497,6 +497,10 @@ spec:
               value: {{ printf "%s%s" $publicBaseUrl $dspBasePath | quote }}
             - name: DATAPLANE_PUBLIC_QUERY_URL
               value: {{ $grafanaPublicQueryUrl | quote }}
+            - name: DATAPLANE_RTSP_PRIVATE_BASE_URL
+              value: {{ .Values.dataPlane.rtspPrivateBaseUrl | quote }}
+            - name: DATAPLANE_RTSP_TRANSCODE_H264
+              value: {{ .Values.dataPlane.rtspTranscodeH264 | quote }}
 {{- if or .Values.dataplane.configStorage.enabled .Values.dataplane.rcloneConfigSecret }}
           volumeMounts:
 {{- if .Values.dataplane.configStorage.enabled }}

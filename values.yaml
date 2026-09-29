@@ -40,6 +40,10 @@ dataPlane:
   # Internal service URL used by the connector to prepare provider addresses.
   baseUrl: http://dil-connector-dataplane:8284
   timeoutSeconds: 10
+  # Private MediaMTX RTSP listener used by the RTSP adapter's H.264/AAC
+  # normalization relay. This is never advertised to remote participants.
+  rtspPrivateBaseUrl: rtsp://dil-connector-mediamtx-rtsp:8554
+  rtspTranscodeH264: true
   # Authenticated/non-GET HTTP sources use the connector's public DSP URL as
   # a short-lived provider proxy. This is derived automatically in the
   # dataplane Deployment from connector.publicBaseUrl and connector.dspBasePath.

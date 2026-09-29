@@ -97,6 +97,26 @@ data:
         "rawCatalog": null,
         "seedDatasetIds": {{ .Values.catalog.seedDatasetIds | toJson }}
       },
+      "company": {
+        "legalName": {{ .Values.company.legalName | quote }},
+        "vatId": {{ .Values.company.vatId | quote }},
+        "countryCode": {{ .Values.company.countryCode | quote }},
+        "address": {{ .Values.company.address | quote }},
+        "email": {{ .Values.company.email | quote }},
+        "website": {{ .Values.company.website | quote }}
+      },
+      "payment": {
+        "enabled": {{ .Values.payment.enabled }},
+        "defaultProvider": {{ .Values.payment.defaultProvider | quote }},
+        "webhookBaseUrl": {{ .Values.payment.webhookBaseUrl | quote }},
+        "receiptTtlSeconds": {{ .Values.payment.receiptTtlSeconds }},
+        "viesUrl": {{ .Values.payment.viesUrl | quote }},
+        "viesTimeoutSeconds": {{ .Values.payment.viesTimeoutSeconds }},
+        "viesCacheTtlSeconds": {{ .Values.payment.viesCacheTtlSeconds }},
+        "vatRates": {{ .Values.payment.vatRates | toJson }},
+        "adapters": {{ .Values.payment.adapters | toJson }},
+        "allowTestAdapter": {{ .Values.payment.allowTestAdapter }}
+      },
       "contract": {
         "flowDelayMs": 180,
         "consumerFlows": {},

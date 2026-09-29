@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: state-logging-20260929-1
+  tag: payment-plane-20260929-1
   pullPolicy: Always
 
 imagePullSecrets:
@@ -56,6 +56,29 @@ catalog:
   # Production connectors must not load the TCK catalog fixture.
   seedFile: ""
   seedDatasetIds: []
+
+# Company identity is sent only in payment-enabled contract requests. Keep
+# legal/tax data tenant-specific and do not put payment-provider secrets in Git.
+company:
+  legalName: ""
+  vatId: ""
+  countryCode: ""
+  address: ""
+  email: ""
+  website: ""
+
+payment:
+  enabled: false
+  defaultProvider: manual
+  webhookBaseUrl: ""
+  receiptTtlSeconds: 86400
+  viesUrl: https://ec.europa.eu/taxation_customs/vies/services/checkVatService
+  viesTimeoutSeconds: 10
+  viesCacheTtlSeconds: 86400
+  vatRates: {}
+  # Configure provider-specific credentials through a protected values source.
+  adapters: {}
+  allowTestAdapter: false
 
 dcp:
   didResolutionTimeoutSeconds: 10

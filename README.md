@@ -165,6 +165,13 @@ After Argo CD syncs, verify the pod has the remote with:
 - Routes are created by ManagementAPI from the application catalog entry.
 - Replace the default demo database password in `values.yaml` for a real
   environment.
+- Payment is disabled by default. Set `payment.enabled: true`, configure the
+  tenant's `company` profile and a protected `payment.adapters` block to enable
+  a provider. The connector validates customer VAT IDs through VIES and caches
+  results for `payment.viesCacheTtlSeconds` seconds. Configure a public
+  `payment.webhookBaseUrl` when registering provider webhooks. Do not commit
+  PayPal, MobilePay or Klarna credentials to this repository; use a protected
+  Helm values source or secret-rendering mechanism.
 
 Do not commit real GHCR tokens or production database passwords to Git.
 # Grafana dataplane authorization

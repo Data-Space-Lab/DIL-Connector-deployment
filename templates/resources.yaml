@@ -501,6 +501,8 @@ spec:
               value: {{ .Values.dataPlane.rtspPrivateBaseUrl | quote }}
             - name: DATAPLANE_RTSP_TRANSCODE_H264
               value: {{ .Values.dataPlane.rtspTranscodeH264 | quote }}
+            - name: DATAPLANE_RTSP_TRANSCODE_MAX_HEIGHT
+              value: {{ .Values.dataPlane.rtspTranscodeMaxHeight | quote }}
 {{- if or .Values.dataplane.configStorage.enabled .Values.dataplane.rcloneConfigSecret }}
           volumeMounts:
 {{- if .Values.dataplane.configStorage.enabled }}
@@ -529,7 +531,7 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 20
           resources:
-{{ toYaml .Values.resources | indent 12 }}
+{{ toYaml (.Values.dataplane.resources | default .Values.resources) | indent 12 }}
 {{- if or .Values.dataplane.configStorage.enabled .Values.dataplane.rcloneConfigSecret }}
       volumes:
 {{- if .Values.dataplane.configStorage.enabled }}

@@ -122,7 +122,7 @@ dataplane:
   enabled: true
   image:
     repository: ghcr.io/data-space-lab/dil-connector-dataplane
-    tag: rtsp-h264-transcode-20260929-5
+    tag: rtsp-h264-transcode-20260929-6
     pullPolicy: Always
   replicas: 1
   port: 8284
@@ -137,12 +137,12 @@ dataplane:
   rcloneConfigPath: /data/rclone.conf
   resources:
     requests:
-      cpu: 500m
-      memory: 512Mi
+      cpu: "1"
+      memory: 1Gi
       ephemeral-storage: 128Mi
     limits:
-      cpu: "2"
-      memory: 1Gi
+      cpu: "4"
+      memory: 4Gi
       ephemeral-storage: 1Gi
   opcuaEnabled: false
   configStorage:

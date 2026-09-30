@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: http-pull-open-20260930-1
+  tag: http-pull-url-20260930-1
   pullPolicy: Always
 
 imagePullSecrets:

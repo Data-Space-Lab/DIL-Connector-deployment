@@ -45,6 +45,9 @@ dataPlane:
   rtspPrivateBaseUrl: rtsp://dil-connector-mediamtx-rtsp:8554
   rtspTranscodeH264: true
   rtspTranscodeMaxHeight: 1080
+  # Zero keeps RTSP relay sessions alive until the transfer is explicitly
+  # cancelled. Set a positive number to opt into automatic expiry.
+  rtspSessionTtlSeconds: 0
   # Authenticated/non-GET HTTP sources use the connector's public DSP URL as
   # a short-lived provider proxy. This is derived automatically in the
   # dataplane Deployment from connector.publicBaseUrl and connector.dspBasePath.

@@ -523,6 +523,10 @@ spec:
               value: {{ .Values.dataPlane.rtspTranscodeH264 | quote }}
             - name: DATAPLANE_RTSP_TRANSCODE_MAX_HEIGHT
               value: {{ .Values.dataPlane.rtspTranscodeMaxHeight | quote }}
+            - name: DATAPLANE_RTSP_SESSION_TTL_SECONDS
+              value: {{ .Values.dataPlane.rtspSessionTtlSeconds | quote }}
+            - name: DATAPLANE_TRANSFER_STORE_PATH
+              value: /data/transfer-store.json
 {{- if or .Values.dataplane.configStorage.enabled .Values.dataplane.rcloneConfigSecret }}
           volumeMounts:
 {{- if .Values.dataplane.configStorage.enabled }}

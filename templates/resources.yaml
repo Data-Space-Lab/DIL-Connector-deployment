@@ -525,6 +525,8 @@ spec:
               value: {{ .Values.dataPlane.rtspTranscodeMaxHeight | quote }}
             - name: DATAPLANE_RTSP_SESSION_TTL_SECONDS
               value: {{ .Values.dataPlane.rtspSessionTtlSeconds | quote }}
+            - name: DATAPLANE_RTSP_SESSION_TTL_ENFORCE
+              value: {{ .Values.dataPlane.rtspSessionTtlEnforce | quote }}
             - name: DATAPLANE_TRANSFER_STORE_PATH
               value: /data/transfer-store.json
 {{- if or .Values.dataplane.configStorage.enabled .Values.dataplane.rcloneConfigSecret }}

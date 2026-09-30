@@ -48,6 +48,9 @@ dataPlane:
   # Zero keeps RTSP relay sessions alive until the transfer is explicitly
   # cancelled. Set a positive number to opt into automatic expiry.
   rtspSessionTtlSeconds: 0
+  # Make the deployment value authoritative over stale persisted adapter
+  # settings and reconcile /data/dataplane-config.json on startup.
+  rtspSessionTtlEnforce: true
   # All HTTP-pull sources use the connector's public DSP URL as a short-lived
   # provider relay. This is derived automatically in the dataplane Deployment
   # from connector.publicBaseUrl and connector.dspBasePath.
@@ -148,7 +151,7 @@ dataplane:
   enabled: true
   image:
     repository: ghcr.io/data-space-lab/dil-connector-dataplane
-    tag: http-pull-relay-20260930-1
+    tag: rtsp-ttl-enforce-20260930-1
     pullPolicy: Always
   replicas: 1
   port: 8284

@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: dcp-scope-20261001-1
+  tag: catalog-direction-20261001-1
   pullPolicy: Always
 
 imagePullSecrets:

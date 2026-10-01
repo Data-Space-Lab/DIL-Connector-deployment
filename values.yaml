@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: http-pull-relay-20260930-1
+  tag: dcp-presentations-20261001-1
   pullPolicy: Always
 
 imagePullSecrets:

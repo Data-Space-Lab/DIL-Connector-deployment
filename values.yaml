@@ -32,6 +32,8 @@ dsp:
 contract:
   # Optional per-dataset overrides. A valid provider request sends an offer
   # automatically when no INITIAL_REQUEST/REQUESTED override is configured.
+  # The GUI can change this live through /mgmt/connector-config.
+  autoAcceptIncomingContractRequests: false
   providerFlows: {}
 
 dataPlane:

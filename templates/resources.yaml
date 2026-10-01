@@ -120,6 +120,7 @@ data:
       "contract": {
         "flowDelayMs": 180,
         "consumerFlows": {},
+        "autoAcceptIncomingContractRequests": {{ .Values.contract.autoAcceptIncomingContractRequests }},
         "providerFlows": {{ .Values.contract.providerFlows | toJson }}
       },
       "metadata": {

@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: dcp-catalog-threadpool-20261001-1
+  tag: dcp-dataspace-verifier-20261001-1
   pullPolicy: Always
 
 imagePullSecrets:

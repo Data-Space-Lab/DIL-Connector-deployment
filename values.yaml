@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: dsp-event-jsonld-20261001-1
+  tag: auto-contract-offers-20261001-1
   pullPolicy: Always
 
 imagePullSecrets:

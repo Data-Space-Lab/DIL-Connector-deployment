@@ -61,6 +61,7 @@ catalog:
   participantId: ""
   serviceEndpointUrl: ""
   dataServiceType: dspace:connector
+  requestTimeoutSeconds: 20
   # Production connectors must not load the TCK catalog fixture.
   seedFile: ""
   seedDatasetIds: []

@@ -93,6 +93,7 @@ data:
         "participantId": {{ $participantDid | quote }},
         "serviceEndpointUrl": {{ $serviceEndpointUrl | quote }},
         "dataServiceType": {{ .Values.catalog.dataServiceType | quote }},
+        "requestTimeoutSeconds": {{ .Values.catalog.requestTimeoutSeconds }},
         "seedFile": {{ .Values.catalog.seedFile | quote }},
         "rawCatalog": null,
         "seedDatasetIds": {{ .Values.catalog.seedDatasetIds | toJson }}

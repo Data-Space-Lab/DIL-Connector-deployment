@@ -136,6 +136,7 @@ data:
       "dcp": {
         "didResolutionTimeoutSeconds": {{ .Values.dcp.didResolutionTimeoutSeconds }},
         "didDocumentCacheTtlSeconds": {{ .Values.dcp.didDocumentCacheTtlSeconds }},
+        "didResolutionRetryAttempts": {{ .Values.dcp.didResolutionRetryAttempts }},
         "presentationQueryTimeoutSeconds": {{ .Values.dcp.presentationQueryTimeoutSeconds }},
         "enabled": {{ .Values.dcp.enabled }},
         "resetCredentialsOnStartup": {{ .Values.dcp.resetCredentialsOnStartup }},

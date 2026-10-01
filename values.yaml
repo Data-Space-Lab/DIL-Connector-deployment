@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: dcp-presentation-query-timeout-20261001-2
+  tag: dcp-did-retry-20261001-1
   pullPolicy: Always
 
 imagePullSecrets:
@@ -92,6 +92,7 @@ payment:
 dcp:
   didResolutionTimeoutSeconds: 10
   didDocumentCacheTtlSeconds: 0
+  didResolutionRetryAttempts: 1
   presentationQueryTimeoutSeconds: 20
   enabled: true
   resetCredentialsOnStartup: false

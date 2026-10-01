@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: dcp-dataspace-verifier-20261001-1
+  tag: dcp-credential-match-debug-20261001-1
   pullPolicy: Always
 
 imagePullSecrets:

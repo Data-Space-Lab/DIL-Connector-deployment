@@ -513,6 +513,12 @@ spec:
               value: {{ .Values.dataplane.rcloneEnabled | quote }}
             - name: DATAPLANE_OPCUA_ENABLED
               value: {{ .Values.dataplane.opcuaEnabled | quote }}
+            - name: DATAPLANE_MQTT_ENABLED
+              value: {{ .Values.dataplane.mqttEnabled | quote }}
+            - name: DATAPLANE_PUBLIC_MQTT_PROVIDER_URL
+              value: {{ .Values.dataplane.mqttPublicProviderUrl | quote }}
+            - name: DATAPLANE_PUBLIC_MQTT_URL
+              value: {{ .Values.dataplane.mqttPublicConsumerUrl | quote }}
             - name: DATAPLANE_CONFIG_PATH
               value: {{ .Values.dataplane.configStorage.path | quote }}
             - name: DATAPLANE_RCLONE_CONFIG_PATH
@@ -548,6 +554,10 @@ spec:
           ports:
             - name: http
               containerPort: {{ .Values.dataplane.port }}
+            - name: mqtt-consumer
+              containerPort: {{ .Values.dataplane.mqttConsumerListenPort }}
+            - name: mqtt-provider
+              containerPort: {{ .Values.dataplane.mqttProviderListenPort }}
           readinessProbe:
             httpGet:
               path: /health
@@ -591,4 +601,10 @@ spec:
     - name: http
       port: {{ .Values.dataplane.port }}
       targetPort: http
+    - name: mqtt-consumer
+      port: {{ .Values.dataplane.mqttConsumerListenPort }}
+      targetPort: mqtt-consumer
+    - name: mqtt-provider
+      port: {{ .Values.dataplane.mqttProviderListenPort }}
+      targetPort: mqtt-provider
 {{- end }}

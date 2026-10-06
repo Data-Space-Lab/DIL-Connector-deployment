@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: dcp-status-metadata-20261001-1
+  tag: mqtt-20261006-1
   pullPolicy: Always
 
 imagePullSecrets:
@@ -156,7 +156,7 @@ dataplane:
   enabled: true
   image:
     repository: ghcr.io/data-space-lab/dil-connector-dataplane
-    tag: rtsp-ttl-enforce-20260930-1
+    tag: mqtt-20261006-1
     pullPolicy: Always
   replicas: 1
   port: 8284
@@ -179,6 +179,13 @@ dataplane:
       memory: 6Gi
       ephemeral-storage: 1Gi
   opcuaEnabled: false
+  mqttEnabled: true
+  # MQTT uses native TCP listeners. Configure publicProviderUrl and
+  # consumerPublicUrl through the GUI or protected values for each tenant.
+  mqttPublicProviderUrl: ""
+  mqttPublicConsumerUrl: ""
+  mqttProviderListenPort: 1885
+  mqttConsumerListenPort: 1883
   configStorage:
     enabled: true
     path: /data/dataplane-config.json

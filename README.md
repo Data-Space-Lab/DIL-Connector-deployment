@@ -92,11 +92,14 @@ kubectl apply -f argocd-application.yaml
 - MQTT is provided by the dataplane image's Mosquitto process. The chart
   exposes `mqtt-consumer` (1883) and `mqtt-provider` (1885) as native TCP
   service ports. Set `dataplane.mqttPublicProviderUrl` and
-  `dataplane.mqttPublicConsumerUrl` to externally reachable MQTT URLs, then
-  configure the provider server profiles and consumer authentication under
-  **Dataplane Config**. `mqtt-stream` source forms are generated from those
-  configured server IDs. Use a TCP load balancer or NodePort for these ports;
-  HTTP ingress paths cannot carry native MQTT traffic.
+  `dataplane.mqttPublicConsumerUrl` to externally reachable MQTT URLs, and use
+  `mqttProviderListenHost`, `mqttProviderListenPort`, `mqttConsumerListenHost`,
+  and `mqttConsumerListenPort` to control the native listeners. These are
+  deployment settings, not GUI settings. Configure provider broker profiles
+  and consumer authentication under **Dataplane Config**. `mqtt-stream` source
+  forms are generated from those configured server IDs. Use a TCP load balancer
+  or NodePort for these ports; HTTP ingress paths cannot carry native MQTT
+  traffic.
 - `dataplane.rcloneConfigSecret`: optional Kubernetes Secret name. The Secret
   must contain a `rclone.conf` key; the chart mounts it at
   `/root/.config/rclone/rclone.conf`.

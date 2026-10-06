@@ -519,6 +519,14 @@ spec:
               value: {{ .Values.dataplane.mqttPublicProviderUrl | quote }}
             - name: DATAPLANE_PUBLIC_MQTT_URL
               value: {{ .Values.dataplane.mqttPublicConsumerUrl | quote }}
+            - name: DATAPLANE_MQTT_PROVIDER_LISTEN_HOST
+              value: {{ .Values.dataplane.mqttProviderListenHost | quote }}
+            - name: DATAPLANE_MQTT_PROVIDER_LISTEN_PORT
+              value: {{ .Values.dataplane.mqttProviderListenPort | quote }}
+            - name: DATAPLANE_MQTT_CONSUMER_LISTEN_HOST
+              value: {{ .Values.dataplane.mqttConsumerListenHost | quote }}
+            - name: DATAPLANE_MQTT_CONSUMER_LISTEN_PORT
+              value: {{ .Values.dataplane.mqttConsumerListenPort | quote }}
             - name: DATAPLANE_CONFIG_PATH
               value: {{ .Values.dataplane.configStorage.path | quote }}
             - name: DATAPLANE_RCLONE_CONFIG_PATH

@@ -180,10 +180,13 @@ dataplane:
       ephemeral-storage: 1Gi
   opcuaEnabled: false
   mqttEnabled: true
-  # MQTT uses native TCP listeners. Configure publicProviderUrl and
-  # consumerPublicUrl through the GUI or protected values for each tenant.
+  # MQTT uses native TCP listeners. Public URLs and listener settings are
+  # deployment-owned and are injected into the dataplane; they are not GUI
+  # settings. Set public URLs to externally reachable TCP endpoints.
   mqttPublicProviderUrl: ""
   mqttPublicConsumerUrl: ""
+  mqttProviderListenHost: "0.0.0.0"
+  mqttConsumerListenHost: "0.0.0.0"
   mqttProviderListenPort: 1885
   mqttConsumerListenPort: 1883
   configStorage:

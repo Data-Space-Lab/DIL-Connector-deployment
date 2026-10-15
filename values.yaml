@@ -156,7 +156,7 @@ dataplane:
   enabled: true
   image:
     repository: ghcr.io/data-space-lab/dil-connector-dataplane
-    tag: adapter-selection-20261015-1
+    tag: s3-tree-20261015-1
     pullPolicy: Always
   replicas: 1
   port: 8284

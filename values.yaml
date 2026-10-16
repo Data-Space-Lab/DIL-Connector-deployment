@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: vat-pricing-20261016-1
+  tag: payment-methods-20261016-1
   pullPolicy: Always
 
 imagePullSecrets:

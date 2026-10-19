@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: logs-gui-filter-20261019-1
+  tag: geo-enforcement-20261019-1
   pullPolicy: Always
 
 imagePullSecrets:
@@ -34,6 +34,8 @@ contract:
   # automatically when no INITIAL_REQUEST/REQUESTED override is configured.
   # The GUI can change this live through /mgmt/connector-config.
   autoAcceptIncomingContractRequests: false
+  # Recheck signed membership country before creating a negotiation.
+  autoRejectGeographicallyIneligibleRequests: true
   providerFlows: {}
 
 dataPlane:

@@ -122,6 +122,7 @@ data:
         "flowDelayMs": 180,
         "consumerFlows": {},
         "autoAcceptIncomingContractRequests": {{ .Values.contract.autoAcceptIncomingContractRequests }},
+        "autoRejectGeographicallyIneligibleRequests": {{ .Values.contract.autoRejectGeographicallyIneligibleRequests }},
         "providerFlows": {{ .Values.contract.providerFlows | toJson }}
       },
       "metadata": {

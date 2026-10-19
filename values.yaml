@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: policy-geography-20261019-1
+  tag: logs-gui-filter-20261019-1
   pullPolicy: Always
 
 imagePullSecrets:

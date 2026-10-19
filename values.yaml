@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: geo-enforcement-20261019-1
+  tag: geo-diagnostics-20261019-1
   pullPolicy: Always
 
 imagePullSecrets:

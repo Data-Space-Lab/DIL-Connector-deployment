@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: usage-limits-20261019-1
+  tag: mcp-directory-20261020-1
   pullPolicy: Always
 
 imagePullSecrets:

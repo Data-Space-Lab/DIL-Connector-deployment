@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: public-catalogue-filter-20261027-1
+  tag: public-catalogue-publish-flag-20261027-1
   pullPolicy: Always
 
 imagePullSecrets:

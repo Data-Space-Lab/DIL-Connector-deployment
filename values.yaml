@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: discovery-parallel-20261020-1
+  tag: public-catalogue-20261027-1
   pullPolicy: Always
 
 imagePullSecrets:

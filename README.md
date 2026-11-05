@@ -36,6 +36,25 @@ token for that organization.
 The `dil-connector` ServiceAccount references `ghcr-pull-secret`, so the Pods
 can pull the private image once that Secret exists.
 
+### Provision through Argo CD
+
+The chart can create the pull Secret during an Argo sync. In the Argo CD UI,
+open the `dil-connector` application, choose **Details**, edit **Parameters**,
+and add these Helm parameters:
+
+```text
+registry.pullSecret.create=true
+registry.pullSecret.username=<github-username>
+registry.pullSecret.password=<github-token>
+```
+
+The chart will create the configured Secret in the connector namespace and the
+ServiceAccount will automatically use it for the connector, management API,
+and dataplane Pods. This keeps the token out of Git, but the value is still stored in the
+Argo Application override and should only be used where Argo administrators
+are trusted. For production, create the Secret externally or use a secret
+operator, then leave `registry.pullSecret.create=false`.
+
 ## Deploy With ManagementAPI
 
 Use `application-catalog-entry.json` as the ManagementAPI deployable

@@ -10,6 +10,21 @@
 {{- $credentialServiceEndpoint := default $publicBaseUrl .Values.dcp.credentialServiceEndpoint -}}
 {{- $issuerServiceEndpoint := default $publicBaseUrl .Values.dcp.issuerServiceEndpoint -}}
 {{- $verifierTriggerEndpoint := default (printf "%s/api/trigger" $publicBaseUrl) .Values.dcp.verifierTriggerEndpoint -}}
+{{- if .Values.registry.pullSecret.create }}
+{{- $registryUsername := required "registry.pullSecret.username is required when registry.pullSecret.create is true" .Values.registry.pullSecret.username -}}
+{{- $registryPassword := required "registry.pullSecret.password is required when registry.pullSecret.create is true" .Values.registry.pullSecret.password -}}
+{{- $registryAuth := printf "%s:%s" $registryUsername $registryPassword | b64enc -}}
+{{- $dockerConfig := dict "auths" (dict .Values.registry.server (dict "username" $registryUsername "password" $registryPassword "auth" $registryAuth)) | toJson | b64enc -}}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.registry.pullSecret.name | quote }}
+  namespace: {{ .Values.namespace | quote }}
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: {{ $dockerConfig | quote }}
+---
+{{- end }}
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -20,7 +35,10 @@ kind: ServiceAccount
 metadata:
   name: dil-connector
   namespace: {{ .Values.namespace | quote }}
-{{- if .Values.imagePullSecrets }}
+{{- if .Values.registry.pullSecret.create }}
+imagePullSecrets:
+  - name: {{ .Values.registry.pullSecret.name | quote }}
+{{- else if .Values.imagePullSecrets }}
 imagePullSecrets:
 {{- range .Values.imagePullSecrets }}
   - name: {{ . | quote }}

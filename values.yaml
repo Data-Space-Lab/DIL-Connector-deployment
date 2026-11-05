@@ -8,6 +8,17 @@ image:
 imagePullSecrets:
   - ghcr-pull-secret
 
+# Set create=true only when supplying the credentials through a protected
+# Argo CD Helm parameter override. Prefer an externally-created Secret in
+# production so the token is not stored in the Application spec.
+registry:
+  server: ghcr.io
+  pullSecret:
+    create: false
+    name: ghcr-pull-secret
+    username: ""
+    password: ""
+
 connector:
   replicas: 1
   connectorId: DIL_CONNECTOR

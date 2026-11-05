@@ -9,6 +9,15 @@ spec:
     repoURL: https://github.com/Data-Space-Lab/DIL-Connector-deployment.git
     targetRevision: HEAD
     path: .
+    helm:
+      # Keep credentials out of Git. Trusted Argo administrators can enable
+      # registry.pullSecret.create and provide the username/password as
+      # protected Application parameters when needed.
+      parameters:
+        - name: registry.pullSecret.create
+          value: "false"
+        - name: registry.pullSecret.name
+          value: ghcr-pull-secret
   destination:
     server: https://kubernetes.default.svc
     namespace: dil-connector

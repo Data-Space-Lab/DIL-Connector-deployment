@@ -20,6 +20,15 @@ kind: Secret
 metadata:
   name: {{ .Values.registry.pullSecret.name | quote }}
   namespace: {{ .Values.namespace | quote }}
+{{- if and .Values.dcp.enabled .Values.dcp.keySecret.create }}
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "-2"
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-20"
+    helm.sh/hook-delete-policy: before-hook-creation
+{{- end }}
 type: kubernetes.io/dockerconfigjson
 data:
   .dockerconfigjson: {{ $dockerConfig | quote }}
@@ -29,6 +38,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: {{ .Values.namespace | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -290,30 +301,30 @@ spec:
                   name: {{ .Values.dataPlane.authorizationSecret | quote }}
                   key: control-token
                   optional: true
+{{- if and .Values.dcp.enabled (has "ES256" .Values.dcp.keyAlgorithms) }}
             - name: DCP_PRIVATE_KEY_PEM
               valueFrom:
                 secretKeyRef:
-                  name: dil-connector-dcp-key
+                  name: {{ .Values.dcp.keySecret.name | quote }}
                   key: private-key.pem
-                  optional: true
             - name: DCP_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: dil-connector-dcp-key
+                  name: {{ .Values.dcp.keySecret.name | quote }}
                   key: key-id
-                  optional: true
+{{- end }}
+{{- if and .Values.dcp.enabled (has "EdDSA" .Values.dcp.keyAlgorithms) }}
             - name: DCP_ED25519_PRIVATE_KEY_PEM
               valueFrom:
                 secretKeyRef:
-                  name: dil-connector-dcp-key
+                  name: {{ .Values.dcp.keySecret.name | quote }}
                   key: ed25519-private-key.pem
-                  optional: true
             - name: DCP_ED25519_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: dil-connector-dcp-key
+                  name: {{ .Values.dcp.keySecret.name | quote }}
                   key: ed25519-key-id
-                  optional: true
+{{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -396,30 +407,30 @@ spec:
                   optional: true
             - name: CONNECTOR_SETTINGS_PATH
               value: /app/settings/kubernetes.json
+{{- if and .Values.dcp.enabled (has "ES256" .Values.dcp.keyAlgorithms) }}
             - name: DCP_PRIVATE_KEY_PEM
               valueFrom:
                 secretKeyRef:
-                  name: dil-connector-dcp-key
+                  name: {{ .Values.dcp.keySecret.name | quote }}
                   key: private-key.pem
-                  optional: true
             - name: DCP_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: dil-connector-dcp-key
+                  name: {{ .Values.dcp.keySecret.name | quote }}
                   key: key-id
-                  optional: true
+{{- end }}
+{{- if and .Values.dcp.enabled (has "EdDSA" .Values.dcp.keyAlgorithms) }}
             - name: DCP_ED25519_PRIVATE_KEY_PEM
               valueFrom:
                 secretKeyRef:
-                  name: dil-connector-dcp-key
+                  name: {{ .Values.dcp.keySecret.name | quote }}
                   key: ed25519-private-key.pem
-                  optional: true
             - name: DCP_ED25519_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: dil-connector-dcp-key
+                  name: {{ .Values.dcp.keySecret.name | quote }}
                   key: ed25519-key-id
-                  optional: true
+{{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.management.port }}

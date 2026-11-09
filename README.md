@@ -185,13 +185,8 @@ After Argo CD syncs, verify the pod has the remote with:
   publicly readable where appropriate. The DIL catalog may continue to expose
   its internal `RcloneData` description; the provider transfer flow translates
   the configured source into the native EDC address required on the wire.
-- For DCP credential issuance, the connector must keep a stable private key
-  matching the public JWK published in its DID document. Create the optional
-  `dil-connector-dcp-key` Secret with `private-key.pem` and `key-id` for ES256,
-  and/or `ed25519-private-key.pem` and `ed25519-key-id` for EdDSA. The chart
-  mounts these values into both connector processes. Without the Secret, keys
-  are generated in memory and a restart can make the published DID key and
-  outgoing DCP signature disagree.
+- DCP signing keys are bootstrapped automatically; see Shared DCP Signing Keys
+  below. Both connector processes require the same persistent Secret.
 - Routes are created by ManagementAPI from the application catalog entry.
 - Replace the default demo database password in `values.yaml` for a real
   environment.
@@ -204,6 +199,45 @@ After Argo CD syncs, verify the pod has the remote with:
   Helm values source or secret-rendering mechanism.
 
 Do not commit real GHCR tokens or production database passwords to Git.
+
+## Shared DCP Signing Keys
+
+With DCP enabled, the chart automatically creates `dil-connector-dcp-key` in the
+connector namespace using a create-once bootstrap Job. It generates PKCS#8
+private keys and stable key IDs for the configured ES256 and/or EdDSA algorithms:
+
+- ES256: `private-key.pem` and `key-id`.
+- EdDSA: `ed25519-private-key.pem` and `ed25519-key-id`.
+
+The Job runs during ArgoCD sync and Helm install/upgrade. It uses the connector
+image, including its cryptography dependency, and a separate namespaced service
+account. It can read/patch only the named signing Secret and create Secrets in
+that namespace; it cannot delete or list Secrets. Patches only add wholly absent
+algorithm pairs and require a matching resource version. No key material is placed
+in Helm values, rendered manifests, Git, or logs. A concurrent create reuses the
+winning Secret instead of replacing it.
+
+Valid existing keys and IDs are reused unchanged. A wholly missing algorithm pair
+is added without replacing existing keys. A partial pair or invalid key fails
+bootstrap explicitly rather than rotating an identity. Both public
+and management services require the same Secret entries, so a missing Secret no
+longer starts two processes with unrelated in-memory keys.
+
+For externally managed keys, set `dcp.keySecret.create=false` and optionally
+`dcp.keySecret.name`. Provision all entries for the enabled algorithms before
+starting the workloads. Retain and back up the Secret: deleting the namespace
+also deletes its keys. Changing enabled algorithms may require an explicit
+operator-managed Secret update; the bootstrap never replaces existing material.
+
+Upgrading an existing installation that has no signing Secret creates new,
+persistent keys and restarts the workloads with them. Existing peer key caches
+and dataspace signing profiles may need updating to the newly published IDs.
+This does not change the participant DID or reissue membership credentials.
+Key rotation is a separate, explicit operation.
+
+Validate with `python3 -m unittest discover -s tests` and `helm lint .` (Python
+tests require cryptography and PyYAML, plus Helm for manifest checks).
+
 # Grafana dataplane authorization
 
 The Grafana adapter uses a private management authorization endpoint, not a DSP

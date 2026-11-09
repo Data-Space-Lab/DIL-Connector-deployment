@@ -103,6 +103,11 @@ payment:
   allowTestAdapter: false
 
 dcp:
+  # Created once at installation and reused across syncs/restarts. Set create
+  # false only when an external secret manager supplies the same key entries.
+  keySecret:
+    create: true
+    name: dil-connector-dcp-key
   didResolutionTimeoutSeconds: 10
   didDocumentCacheTtlSeconds: 0
   didResolutionRetryAttempts: 1

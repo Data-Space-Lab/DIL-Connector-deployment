@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: contract-document-20261028-1
+  tag: notifications-20261110-1
   pullPolicy: Always
 
 imagePullSecrets:

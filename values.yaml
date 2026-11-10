@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: notifications-20261110-1
+  tag: s3-transfer-20261110-1
   pullPolicy: Always
 
 imagePullSecrets:

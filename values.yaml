@@ -2,7 +2,7 @@ namespace: dil-connector
 
 image:
   repository: ghcr.io/data-space-lab/dil-connector
-  tag: unverified-connectors-20261112-1
+  tag: unverified-connectors-20261112-2
   pullPolicy: Always
 
 imagePullSecrets:

@@ -1,7 +1,7 @@
 # Material tenant release: private catalogs, HTTP query mapping and verification debug.
 image:
-  tag: release-20261119-5
+  tag: release-20261119-6
 
 dataplane:
   image:
-    tag: release-20261119-5
+    tag: release-20261119-6

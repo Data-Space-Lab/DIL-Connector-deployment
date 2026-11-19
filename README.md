@@ -320,3 +320,37 @@ on that service and use an externally managed Secret here instead of generating
 an unrelated token. Credential rotation requires a coordinated operator procedure
 and rollout of all controller participants. Separate authority-callback credentials
 and any compute workers keep their existing approved configuration.
+
+### Confirm the controller fix is actually deployed
+
+Updating application images alone does not update the chart. If a running
+Deployment has only `DATAPLANE_CONTROL_TOKEN`, the controller fix is absent from
+that Deployment; creating the old `dil-connector-dataplane-auth` Grafana Secret
+will not add controller authentication.
+
+First merge the controller-credential deployment change into the revision tracked
+by Argo CD (normally this repository's `main`/`HEAD`), then refresh and sync **each
+vcluster's** application. Confirm Argo's synced Git revision includes the fix.
+In each vcluster, inspect the rendered/live specifications without reading tokens:
+
+```sh
+# Use the context for independent-test, then repeat for independent-vtt.
+# These are separate vclusters, not necessarily namespace names.
+kubectl --context <tenant-vcluster-context> -n dil-connector \
+  get deploy dil-connector dil-connector-management dil-connector-dataplane \
+  -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{range .spec.template.spec.containers[*].env[?(@.name=="DATAPLANE_CONTROLLER_TOKEN")]}{.name}{": "}{.valueFrom.secretKeyRef.name}{" / "}{.valueFrom.secretKeyRef.key}{"\n"}{end}{end}'
+```
+
+All three must reference **`dil-connector-controller-auth / controller-token`**
+(or the explicitly configured external controller Secret). The reference is
+required, not `optional: true`. The default bootstrap Job creates that Secret; a
+successful hook Job may already have been deleted by its hook completion policy.
+Check failed hook status/events if the Secret was not created. Never print Secret
+`data`, token values or full container environments when checking this.
+
+If Git contains the fix but those references are missing, investigate the deployed
+chart path/revision, pinned artifact or unsynced Argo application before changing
+credentials. If references exist but the Secret is absent, investigate bootstrap
+hook execution/RBAC/private image pull, or provision the chosen external Secret
+when `controllerSecret.create=false`. Wait for all three updated Deployments to
+roll out before retrying GUI Settings → Dataplanes.

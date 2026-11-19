@@ -36,7 +36,7 @@ class KeyManifestTests(unittest.TestCase):
 
     def test_bootstrap_hook_lifecycle_and_rbac(self):
         documents = render()
-        job = next(document for document in documents if document["kind"] == "Job")
+        job = next(document for document in documents if document["kind"] == "Job" and document["metadata"]["name"] == "dil-connector-key-bootstrap")
         annotations = job["metadata"]["annotations"]
         self.assertEqual(annotations["argocd.argoproj.io/hook"], "Sync")
         self.assertIn("BeforeHookCreation", annotations["argocd.argoproj.io/hook-delete-policy"])
@@ -46,7 +46,7 @@ class KeyManifestTests(unittest.TestCase):
         account = next(document for document in documents if document["kind"] == "ServiceAccount"
                        and document["metadata"]["name"] == "dil-connector-key-bootstrap")
         self.assertEqual(account["imagePullSecrets"], [{"name": "ghcr-pull-secret"}])
-        role = next(document for document in documents if document["kind"] == "Role")
+        role = next(document for document in documents if document["kind"] == "Role" and document["metadata"]["name"] == "dil-connector-key-bootstrap")
         self.assertEqual(role["rules"], [
             {"apiGroups": [""], "resources": ["secrets"], "resourceNames": ["dil-connector-dcp-key"], "verbs": ["get", "patch"]},
             {"apiGroups": [""], "resources": ["secrets"], "verbs": ["create"]},
@@ -58,14 +58,14 @@ class KeyManifestTests(unittest.TestCase):
 
     def test_external_secret_and_custom_name(self):
         documents = render("--set", "dcp.keySecret.create=false", "--set", "dcp.keySecret.name=operator-managed-key")
-        self.assertFalse(any(document["kind"] in {"Job", "Role", "RoleBinding"} for document in documents))
+        self.assertFalse(any(document["kind"] in {"Job", "Role", "RoleBinding"} and document["metadata"]["name"] == "dil-connector-key-bootstrap" for document in documents))
         for service in deployments(documents):
             refs = [entry["valueFrom"]["secretKeyRef"] for entry in service["spec"]["template"]["spec"]["containers"][0]["env"] if entry["name"].startswith("DCP_")]
             self.assertEqual({ref["name"] for ref in refs}, {"operator-managed-key"})
 
     def test_dcp_disabled_has_no_key_dependency(self):
         documents = render("--set", "dcp.enabled=false")
-        self.assertFalse(any(document["kind"] == "Job" for document in documents))
+        self.assertFalse(any(document["kind"] == "Job" and document["metadata"]["name"] == "dil-connector-key-bootstrap" for document in documents))
         for service in deployments(documents):
             self.assertFalse(any(entry["name"].startswith("DCP_") for entry in service["spec"]["template"]["spec"]["containers"][0]["env"]))
 

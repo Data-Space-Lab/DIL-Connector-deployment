@@ -1,0 +1,113 @@
+{{- define "dil-connector.controller-bootstrap-annotations" }}
+annotations:
+  argocd.argoproj.io/hook: Sync
+  argocd.argoproj.io/sync-wave: "-1"
+  argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+  helm.sh/hook: pre-install,pre-upgrade
+  helm.sh/hook-weight: "-10"
+  helm.sh/hook-delete-policy: before-hook-creation
+{{- end }}
+{{- if (dig "controllerSecret" "create" true .Values.dataPlane) }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dil-connector-controller-bootstrap
+  namespace: {{ .Values.namespace | quote }}
+  {{- include "dil-connector.controller-bootstrap-annotations" . | nindent 2 }}
+{{- if .Values.registry.pullSecret.create }}
+imagePullSecrets:
+  - name: {{ .Values.registry.pullSecret.name | quote }}
+{{- else if .Values.imagePullSecrets }}
+imagePullSecrets:
+{{- range .Values.imagePullSecrets }}
+  - name: {{ . | quote }}
+{{- end }}
+{{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: dil-connector-controller-bootstrap
+  namespace: {{ .Values.namespace | quote }}
+  {{- include "dil-connector.controller-bootstrap-annotations" . | nindent 2 }}
+rules:
+  - apiGroups: [""]
+    resources: [secrets]
+    resourceNames: [{{ dig "controllerSecret" "name" "dil-connector-controller-auth" .Values.dataPlane | quote }}]
+    verbs: [get, patch]
+  - apiGroups: [""]
+    resources: [secrets]
+    verbs: [create]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dil-connector-controller-bootstrap
+  namespace: {{ .Values.namespace | quote }}
+  {{- include "dil-connector.controller-bootstrap-annotations" . | nindent 2 }}
+subjects:
+  - kind: ServiceAccount
+    name: dil-connector-controller-bootstrap
+    namespace: {{ .Values.namespace | quote }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: dil-connector-controller-bootstrap
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dil-connector-controller-bootstrap
+  namespace: {{ .Values.namespace | quote }}
+  {{- include "dil-connector.controller-bootstrap-annotations" . | nindent 2 }}
+data:
+  bootstrap_dcp_keys.py: |
+{{ .Files.Get "scripts/bootstrap_dcp_keys.py" | indent 4 }}
+  bootstrap_controller_token.py: |
+{{ .Files.Get "scripts/bootstrap_controller_token.py" | indent 4 }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dil-connector-controller-bootstrap
+  namespace: {{ .Values.namespace | quote }}
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-1"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      serviceAccountName: dil-connector-controller-bootstrap
+      restartPolicy: OnFailure
+      containers:
+        - name: create-controller-secret
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          command: [python, /bootstrap/bootstrap_controller_token.py]
+          env:
+            - name: CONTROLLER_SECRET_NAME
+              value: {{ dig "controllerSecret" "name" "dil-connector-controller-auth" .Values.dataPlane | quote }}
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          volumeMounts:
+            - name: bootstrap-script
+              mountPath: /bootstrap
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+      volumes:
+        - name: bootstrap-script
+          configMap:
+            name: dil-connector-controller-bootstrap
+{{- end }}

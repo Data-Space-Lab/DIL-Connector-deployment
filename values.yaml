@@ -50,6 +50,11 @@ contract:
   providerFlows: {}
 
 dataPlane:
+  # Created once per namespace by the controller bootstrap Job and retained.
+  # Set create=false when a secret manager provides the controller-token key.
+  controllerSecret:
+    create: true
+    name: dil-connector-controller-auth
   # Provision externally; missing keys leave Grafana authorization disabled.
   authorizationSecret: dil-connector-dataplane-auth
   # Internal service URL used by the connector to prepare provider addresses.

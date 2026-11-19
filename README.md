@@ -273,3 +273,84 @@ See [FirecREST compute deployment requirements](docs/firecrest-compute.md) for t
 planned worker/database, provider artifact storage and early two-connector test
 setup. This is planning documentation; it introduces no new Helm values or
 running services.
+
+## Dataplane controller authentication
+
+Current dataplane images require `DATAPLANE_CONTROLLER_TOKEN` for private adapter
+inventory, configuration and transfer operations. The chart now provisions this
+per namespace and injects the **same** value into `dil-connector`,
+`dil-connector-management` and `dil-connector-dataplane`. The GUI, execution worker,
+DCP clients and FirecREST execution tenants do not receive this admin credential.
+
+By default `dataPlane.controllerSecret.create=true`. A pre-install/pre-upgrade
+bootstrap Job creates Secret `dil-connector-controller-auth` with key
+`controller-token`, or validates and reuses its existing value. Argo CD runs the
+same setup as a Sync hook. Secret creation is independent of DCP/signing-key setup;
+rendering manifests generates no credential or random Secret data. Existing valid
+values are retained, malformed values fail closed, and a resource-version guard
+protects additive updates against concurrent writers. Do not delete this Secret
+on upgrades. No authority/Grafana/FirecREST credential is copied or rotated.
+
+Operators using an external secret manager can set:
+
+```yaml
+dataPlane:
+  controllerSecret:
+    create: false
+    name: my-controller-secret
+```
+
+Provision a private `controller-token` key containing a random 32–4096-character
+printable ASCII token before syncing. The three Deployments require that Secret;
+there is no empty/default credential or legacy-auth bypass. Use distinct values
+for controller, authority-callback and backend execution roles. The existing
+`dataPlane.authorizationSecret` remains the separate Grafana authorization Secret.
+
+For a tenant showing **503 / No dataplane adapters are available** after upgrading
+the application images, sync/upgrade this chart and allow the bootstrap Job and
+all three updated Deployments to complete. Check the tenant's controller bootstrap
+Job and Secret **presence**, then verify authenticated inventory from the native
+management service and reopen Settings → Dataplanes. `/health` alone is not an
+authentication check. Do not publish Secret values or full Pod environment dumps
+in diagnostics. No FirecREST source configuration or database migration is needed
+to restore the adapter inventory.
+
+If the dataplane runs outside this chart, provision a matching controller identity
+on that service and use an externally managed Secret here instead of generating
+an unrelated token. Credential rotation requires a coordinated operator procedure
+and rollout of all controller participants. Separate authority-callback credentials
+and any compute workers keep their existing approved configuration.
+
+### Confirm the controller fix is actually deployed
+
+Updating application images alone does not update the chart. If a running
+Deployment has only `DATAPLANE_CONTROL_TOKEN`, the controller fix is absent from
+that Deployment; creating the old `dil-connector-dataplane-auth` Grafana Secret
+will not add controller authentication.
+
+First merge the controller-credential deployment change into the revision tracked
+by Argo CD (normally this repository's `main`/`HEAD`), then refresh and sync **each
+vcluster's** application. Confirm Argo's synced Git revision includes the fix.
+In each vcluster, inspect the rendered/live specifications without reading tokens:
+
+```sh
+# Use the context for independent-test, then repeat for independent-vtt.
+# These are separate vclusters, not necessarily namespace names.
+kubectl --context <tenant-vcluster-context> -n dil-connector \
+  get deploy dil-connector dil-connector-management dil-connector-dataplane \
+  -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{range .spec.template.spec.containers[*].env[?(@.name=="DATAPLANE_CONTROLLER_TOKEN")]}{.name}{": "}{.valueFrom.secretKeyRef.name}{" / "}{.valueFrom.secretKeyRef.key}{"\n"}{end}{end}'
+```
+
+All three must reference **`dil-connector-controller-auth / controller-token`**
+(or the explicitly configured external controller Secret). The reference is
+required, not `optional: true`. The default bootstrap Job creates that Secret; a
+successful hook Job may already have been deleted by its hook completion policy.
+Check failed hook status/events if the Secret was not created. Never print Secret
+`data`, token values or full container environments when checking this.
+
+If Git contains the fix but those references are missing, investigate the deployed
+chart path/revision, pinned artifact or unsynced Argo application before changing
+credentials. If references exist but the Secret is absent, investigate bootstrap
+hook execution/RBAC/private image pull, or provision the chosen external Secret
+when `controllerSecret.create=false`. Wait for all three updated Deployments to
+roll out before retrying GUI Settings → Dataplanes.

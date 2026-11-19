@@ -20,7 +20,7 @@ kind: Secret
 metadata:
   name: {{ .Values.registry.pullSecret.name | quote }}
   namespace: {{ .Values.namespace | quote }}
-{{- if and .Values.dcp.enabled .Values.dcp.keySecret.create }}
+{{- if or (and .Values.dcp.enabled .Values.dcp.keySecret.create) (dig "controllerSecret" "create" true .Values.dataPlane) }}
   annotations:
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-2"
@@ -293,6 +293,11 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
           env:
+            - name: DATAPLANE_CONTROLLER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ dig "controllerSecret" "name" "dil-connector-controller-auth" .Values.dataPlane | quote }}
+                  key: controller-token
             - name: CONNECTOR_SETTINGS_PATH
               value: /app/settings/kubernetes.json
             - name: DATAPLANE_CONTROL_TOKEN
@@ -405,6 +410,11 @@ spec:
                   name: {{ .Values.dataPlane.authorizationSecret | quote }}
                   key: control-token
                   optional: true
+            - name: DATAPLANE_CONTROLLER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ dig "controllerSecret" "name" "dil-connector-controller-auth" .Values.dataPlane | quote }}
+                  key: controller-token
             - name: CONNECTOR_SETTINGS_PATH
               value: /app/settings/kubernetes.json
 {{- if and .Values.dcp.enabled (has "ES256" .Values.dcp.keyAlgorithms) }}
@@ -523,6 +533,11 @@ spec:
             - --port
             - {{ .Values.dataplane.port | quote }}
           env:
+            - name: DATAPLANE_CONTROLLER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ dig "controllerSecret" "name" "dil-connector-controller-auth" .Values.dataPlane | quote }}
+                  key: controller-token
             - name: DATAPLANE_CONNECTOR_URL
               value: {{ printf "http://dil-connector-management:%v" .Values.management.port | quote }}
             - name: DATAPLANE_CONTROL_TOKEN

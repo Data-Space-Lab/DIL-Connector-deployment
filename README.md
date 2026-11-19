@@ -267,6 +267,13 @@ one dataplane replica/worker for SQLite auditing and process-local rate limits.
 Grafana queries require a FINALIZED agreement and STARTED transfer. Installing
 the images alone does not configure a provider Grafana service or public routes.
 
+## Proposed FirecREST compute deployment
+
+See [FirecREST compute deployment requirements](docs/firecrest-compute.md) for the
+planned worker/database, provider artifact storage and early two-connector test
+setup. This is planning documentation; it introduces no new Helm values or
+running services.
+
 ## Dataplane controller authentication
 
 Current dataplane images require `DATAPLANE_CONTROLLER_TOKEN` for private adapter

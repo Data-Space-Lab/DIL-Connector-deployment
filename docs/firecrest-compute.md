@@ -62,3 +62,71 @@ atomic quotas/budget reservations, enforceable execution/storage/transfer caps,
 deduplicated metering and settlement integration behavior. A usage event is not
 proof of payment. DeepSeek/YOLO profiles are independent additions after generic
 CPU acceptance, not deployment prerequisites.
+
+## Provider bootstrap without known consumers (DIL Connector task #3)
+
+With the matching task #3 source image, provider startup no longer requires
+preconfigured consumer output destinations. This change is implemented in the
+source runtime, not a new Helm value or automatically provisioned worker.
+
+- Configure the real FirecREST execution backend, dedicated execution identities,
+  compute database, signing/authority credentials, policy and input staging.
+- For workloads that collect results, configure **provider-owned output staging**
+  using the source repository's
+  [output-staging.json](https://github.com/Data-Space-Lab/DIL-Connector-source/blob/main/Dataplane/examples/output-staging.json).
+  Set the private worker `outputConfigurationFile` to that protected file. Omit
+  `destinations` or use `[]`. No consumer DID, destination bucket/prefix, storage
+  credentials file or fabricated `compute-output-delivery.json` is required.
+- A profile containing exclusively offers that permit only `execution-only` can
+  omit `outputConfigurationFile` altogether. `provider-only` retains verified
+  declared outputs at the provider and still needs real staging storage.
+- Drain legacy collected-but-undelivered outputs with the old worker first.
+  Migration 009 cannot prove their original consumer credentials and deliberately
+  denies delivery for collections without a credential fingerprint. Do not
+  silently backfill these with replacement keys.
+- Apply source migrations 001–009 explicitly before starting the updated API and
+  worker. Migration 009 adds private runtime output bindings and the
+  `NOT_REQUIRED` output-transfer state. Grant API/worker roles DML on the new
+  `output_bindings` and `output_registration_keys` tables. Treat the bindings table
+  and database backups as secrets because it stores scoped consumer credentials.
+- Deploy matching Connector management and dataplane API/worker versions. Normal
+  startup performs a schema readiness check and does not apply migrations.
+  Back up before migrating; rollback requires stopping writers and restoring the
+  matching pre-upgrade database before running older images.
+
+GUI provider validation shows “No consumer destinations provisioned yet” as a
+runtime delivery condition while reporting valid provider configuration. This
+local validation does not prove live backend/worker connectivity. Consumer
+registration does not edit the provider configuration, invalidate bound data
+sources or require an API/worker restart.
+
+After negotiation, the consumer provides its output destination and scoped
+credentials through the authenticated runtime registration flow. An independent,
+finalized output-sharing agreement must bind the participant, compute agreement,
+exact offer/workload versions and destination. The private Connector authority
+checks original/finalized agreement snapshots, parties, dataspace, expiry and both
+agreements' policy/payment. Compute permission alone does not authorize output
+sharing. The destination must additionally satisfy the provider-controlled HTTPS
+origin/public-IP policy; an empty origin allowlist allows startup and denies all
+consumer delivery.
+
+The consumer calls `POST /compute/v1alpha1/output-destinations` with its negotiated
+session capability and idempotency key, or uses its authenticated Connector
+management operation `register-output`. The result exposes only a destination
+reference and bounded expiry. That reference is selected at job admission.
+Credentials/target/evidence are immutable; delivery retries use the original
+binding and exact collected manifest. Revoked, expired, mismatched or missing
+permissions fail closed. Replacing credentials or storage scope requires a new
+reference and job, not mutation of an accepted job.
+
+Non-delivery jobs require an explicit `allowedOutputModes` entry in a newly
+versioned immutable offer and a matching `JobRequest.outputMode`. They cannot be
+selected merely by omitting a destination. On success they report execution/job
+`SUCCEEDED`, output transfer `NOT_REQUIRED` and no consumer delivery receipt.
+The default/omitted mode remains consumer delivery with a mandatory independently
+authorized destination.
+
+See the source [runtime output runbook](https://github.com/Data-Space-Lab/DIL-Connector-source/blob/main/Dataplane/COMPUTE-OUTPUTS.md#provider-startup-and-runtime-destinations-dil-connector-task-3)
+for exact consent and registration payloads, credential handling, migration and
+rollback. Do not copy demonstration consumer credentials into chart values,
+ConfigMaps or provider profiles. No live deployment is changed by these docs.

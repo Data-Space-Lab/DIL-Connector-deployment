@@ -354,3 +354,10 @@ credentials. If references exist but the Secret is absent, investigate bootstrap
 hook execution/RBAC/private image pull, or provision the chosen external Secret
 when `controllerSecret.create=false`. Wait for all three updated Deployments to
 roll out before retrying GUI Settings → Dataplanes.
+
+### Compute provider startup without consumer destinations
+
+[Task #3's provider bootstrap guidance](docs/firecrest-compute.md#provider-bootstrap-without-known-consumers-dil-connector-task-3)
+separates provider output staging from runtime consumer authorization. It covers
+source migration 009, required matching images and contract-permitted jobs without
+consumer delivery. No placeholder consumer output file or credentials are needed.

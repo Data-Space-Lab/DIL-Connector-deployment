@@ -1,7 +1,9 @@
 # FirecREST compute deployment plan
 
-Status: proposed requirements, not implemented chart values or service manifests.
-Do not enable an adapter or paid offer by copying invented configuration keys.
+Status: the split compute API/worker is available as opt-in chart values
+(`dataplane.compute`, see [below](#split-compute-api-and-worker)). The other
+sections are proposed requirements. Do not enable an adapter or paid offer by
+copying invented configuration keys.
 
 Architecture: [generic FirecREST dataplane](https://github.com/Data-Space-Lab/Firecrest-docker/blob/main/docs/dataplane/architecture.md).
 Implementation contract: [DIL source](https://github.com/Data-Space-Lab/DIL-Connector-source/blob/main/Documentation/Architecture/firecrest-compute-extension.md).
@@ -130,3 +132,191 @@ See the source [runtime output runbook](https://github.com/Data-Space-Lab/DIL-Co
 for exact consent and registration payloads, credential handling, migration and
 rollback. Do not copy demonstration consumer credentials into chart values,
 ConfigMaps or provider profiles. No live deployment is changed by these docs.
+
+## Split compute API and worker
+
+Kubernetes half of
+[DIL-Connector-source#73](https://github.com/Data-Space-Lab/DIL-Connector-source/issues/73).
+The Compose reference is `Dataplane/deploy/compute/` in the source repository.
+The full procedure, helper key and storage bootstrap are in its
+[deployment runbook](https://github.com/Data-Space-Lab/DIL-Connector-source/blob/main/Documentation/Architecture/runtime-output-deployment-runbook.md).
+
+With `dataplane.compute.enabled=false` (the default) the chart renders exactly
+as before. Enabled, it renders:
+
+| Object | Role |
+| --- | --- |
+| `Deployment/dil-connector-dataplane` | Compute API and the ordinary dataplane. Pod label `app.kubernetes.io/component=dataplane`. Selector unchanged. |
+| `Deployment/dil-connector-compute-worker` | `python -m dataplane.compute.worker`, `dataplane.compute.worker.replicas` pods, label `app.kubernetes.io/component=compute-worker`. No Service. |
+| `Job/dil-connector-compute-migrate` | `python -m dataplane.compute.worker --migrate` with the migration-owner DSN. Helm `pre-install,pre-upgrade` hook and Argo CD `Sync` hook in wave `-1`, so it finishes before either Deployment rolls. |
+| `NetworkPolicy/dil-connector-compute-worker` | Optional: no ingress; egress to DNS and the rules you list. |
+
+[`values-compute-example.yaml`](../values-compute-example.yaml) shows every
+value with placeholders:
+
+```bash
+helm template connector . -f values-compute-example.yaml
+```
+
+### Same image and same settings
+
+- `dataplane.compute.image.digest` is required and must be `sha256:…`. API,
+  worker, migration Job and their init containers all use
+  `<repository>@<digest>`. `dataplane.image.tag` is ignored while compute is
+  enabled.
+- `sourceRevision` and `imageRevision` are set as
+  `DIL_CONNECTOR_SOURCE_REVISION` / `DIL_CONNECTOR_IMAGE_REVISION` in every pod.
+  Use the image's own values, or `compare` reports a mismatch.
+- The plain settings in `dataplane.compute.env` (policy, signing key, FirecREST
+  config and profiles paths, driver factory) and `DATAPLANE_CONFIG_PATH` are
+  identical in all pods. The worker mounts the API's settings PVC
+  (`worker.mountSettingsVolume`). That PVC is ReadWriteOnce, so the worker must
+  run on the API's node (`dataplane.nodeName`) unless you switch it to a
+  ReadWriteMany storage class.
+- All pods carry `checksum/compute-config`, a hash of the image, revisions,
+  `configVersion`, Secret/ConfigMap names, env and host aliases. A change to any
+  of them rolls API and worker together. Both Deployments use `Recreate`, so two
+  releases never run side by side. Worker replicas and resources are not in the
+  hash.
+- Helm cannot see the contents of Secrets it does not own. When you change a
+  protected file, either create a new Secret name (`dil-compute-protected-v2`)
+  or bump `configVersion`. Otherwise the pods keep the old copy.
+
+### Secrets and protected files
+
+Create these out of band. The chart only references them by name:
+
+| Value | Contents |
+| --- | --- |
+| `protectedSecret` | One key per protected file: `compute-provider-policy.json`, `firecrest-worker.json`, `compute-signing.pem`, `compute-helper-signing.pem`, staging/output credentials, Keycloak client secret and JWKS, … (the names your `firecrest-worker.json` and profiles reference). |
+| `settingsConfigMap` | Optional, e.g. `compute-provider-profiles.json`. |
+| `runtimeEnvSecret` | `envFrom` for API and worker: runtime-role `DATAPLANE_COMPUTE_DATABASE_URL`, `DATAPLANE_AUTHORITY_TOKEN`, `DATAPLANE_COMPUTE_CONTROL_TOKEN`, `DATAPLANE_COMPUTE_SIGNING_KEY_ID`, `DATAPLANE_COMPUTE_ISSUER`, `DATAPLANE_COMPUTE_AUDIENCE` (see `compute-runtime.env.example`). `DATAPLANE_CONTROLLER_TOKEN` comes from the chart's controller Secret. |
+| `migration.envSecret` | Only the migration-owner `DATAPLANE_COMPUTE_DATABASE_URL`. Mounted in the migration Job only. |
+| `worker.helperSsh.secretName` | `compute-tenant-ssh-key` and `compute-known-hosts`, copied for the worker only. |
+
+```bash
+kubectl -n dil-connector create secret generic dil-compute-protected-v1 \
+  --from-file=<secrets-dir>/compute-provider-policy.json \
+  --from-file=<secrets-dir>/firecrest-worker.json \
+  --from-file=<secrets-dir>/compute-signing.pem
+kubectl -n dil-connector create secret generic dil-compute-runtime-env \
+  --from-env-file=<private-dir>/compute-runtime.env
+kubectl -n dil-connector create secret generic dil-compute-migration-env \
+  --from-env-file=<private-dir>/compute-migration.env
+kubectl -n dil-connector create secret generic dil-compute-helper-ssh \
+  --from-file=<secrets-dir>/compute-tenant-ssh-key \
+  --from-file=<secrets-dir>/compute-known-hosts
+```
+
+The dataplane rejects protected files that are symlinks or readable by group or
+others. Kubernetes Secret and ConfigMap volumes are symlinks into `..data`, so
+they cannot be mounted at `/run/secrets` directly. An init container from the
+same image copies each file into an in-memory `emptyDir` as a regular `0400`
+file. The main container mounts that directory read-only at `/run/secrets`, the
+path the Compose reference uses. The dataplane image runs as root. If you add a
+`runAsUser`, the copies are owned by that user and remain private.
+
+### Tenant workspace, helper SSH and egress
+
+- `worker.workspaces` mounts the tenant workspace, artifact cache and output
+  snapshots at the **identical** absolute path the FirecREST helper and Slurm
+  use. The default is a `hostPath` of type `Directory`. It fails to start if the
+  directory is missing on that node. Pin the worker to nodes that have the paths
+  with `worker.nodeName`, `nodeSelector` or `affinity`. An `existingClaim`
+  works only if that volume exposes the same files the helper sees at that path.
+- The helper key's `authorized_keys` line has `from="…"`. Pod IPs change, so
+  `from=` cannot name a pod. Use one of these:
+  - an egress gateway with a fixed SNAT address (select it with
+    `worker.podLabels`), and put that address in `from=`;
+  - `worker.hostNetwork: true`, and put the node addresses in `from=`.
+    NetworkPolicy does not apply to host-network pods, so the chart refuses to
+    render both.
+- `dataplane.compute.hostAliases` replaces Compose `extra_hosts`: pin the
+  public Connector name to the front proxy (NAT hairpin) and `helper.host` to
+  the address that reaches the helper's sshd.
+- `worker.networkPolicy` denies ingress and allows DNS plus `egress`. List the
+  helper sshd, FirecREST, the compute PostgreSQL, S3 staging and the Connector
+  authority origin.
+
+### Database roles
+
+Run migrations with a migration owner and the services with a separate runtime
+role. Never give the runtime pods the owner DSN. As the schema owner, with the
+actual role names substituted:
+
+```sql
+GRANT USAGE ON SCHEMA dil_compute TO "<compute-runtime-role>";
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dil_compute
+  TO "<compute-runtime-role>";
+GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA dil_compute
+  TO "<compute-runtime-role>";
+REVOKE INSERT, UPDATE, DELETE ON dil_compute.schema_versions
+  FROM "<compute-runtime-role>";
+
+-- Tables and sequences created by later migrations (run as the owner role).
+ALTER DEFAULT PRIVILEGES FOR ROLE "<compute-migration-owner>" IN SCHEMA dil_compute
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "<compute-runtime-role>";
+ALTER DEFAULT PRIVILEGES FOR ROLE "<compute-migration-owner>" IN SCHEMA dil_compute
+  GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO "<compute-runtime-role>";
+```
+
+Default privileges cover only tables the owner creates later. If a migration
+creates `schema_versions` again, repeat the `REVOKE`. `inspect` reports
+`DATABASE_GRANTS_MISSING` with each missing `table:PRIVILEGE`.
+
+### Upgrade order
+
+1. Pause provider admission, drain or cancel nonterminal work, back up the
+   compute database.
+2. Set the new `image.digest`, `sourceRevision`, `imageRevision`, and new
+   Secret names or `configVersion`.
+3. Sync. The migration Job runs first. If it fails, the sync stops and the old
+   API and worker keep running. Read the logs with
+   `kubectl -n dil-connector logs job/dil-connector-compute-migrate`. The Job is
+   kept until the next sync.
+4. API and worker roll together. Then run the parity check below.
+
+`migration.mountSettingsVolume` mounts the settings PVC in the Job, for
+profiles managed in the GUI. The PVC does not exist before the first install,
+so enable it only after that.
+
+### Parity check across all worker pods
+
+`kubectl exec deployment/…` picks one arbitrary pod. Capture every worker:
+
+```bash
+ns=dil-connector
+kubectl -n "$ns" get pods -l 'app.kubernetes.io/component in (dataplane,compute-worker)' \
+  -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.status.containerStatuses[*].imageID}{"\n"}{end}'
+
+evidence_dir=$(mktemp -d)
+api_pod=$(kubectl -n "$ns" get pods -l app.kubernetes.io/component=dataplane \
+  --field-selector=status.phase=Running -o name | head -n 1)
+kubectl -n "$ns" exec "$api_pod" -c dil-connector-dataplane -- \
+  python -m dataplane.compute.diagnostics inspect --component api \
+  > "$evidence_dir/api.json"
+worker_args=()
+for pod in $(kubectl -n "$ns" get pods -l app.kubernetes.io/component=compute-worker -o name); do
+  name=${pod#pod/}
+  kubectl -n "$ns" exec "$pod" -c compute-worker -- \
+    python -m dataplane.compute.diagnostics inspect --component worker \
+    > "$evidence_dir/worker-$name.json"
+  worker_args+=(--worker "/tmp/diagnostics/worker-$name.json")
+done
+
+# Compare in a pod running the same image, within --max-age-seconds of capture.
+kubectl -n "$ns" exec "$api_pod" -c dil-connector-dataplane -- mkdir -p /tmp/diagnostics
+for file in "$evidence_dir"/*.json; do
+  kubectl -n "$ns" exec -i "$api_pod" -c dil-connector-dataplane -- \
+    sh -c "cat > /tmp/diagnostics/${file##*/}" < "$file"
+done
+kubectl -n "$ns" exec "$api_pod" -c dil-connector-dataplane -- \
+  python -m dataplane.compute.diagnostics compare \
+  --api /tmp/diagnostics/api.json "${worker_args[@]}"
+kubectl -n "$ns" exec "$api_pod" -c dil-connector-dataplane -- rm -rf /tmp/diagnostics
+rm -rf "$evidence_dir"
+```
+
+`compare` exits zero only for `READY`. The number of `--worker` arguments must
+equal `worker.replicas`. A pending or crashing worker is a parity failure; do
+not skip it. Record which pod name maps to which `worker[n]` position.

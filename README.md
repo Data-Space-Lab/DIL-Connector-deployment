@@ -14,6 +14,9 @@ The deployment starts:
 - `dil-connector-dataplane` on port `8284` for negotiated data transfers
 - `dil-connector-postgres` with a persistent volume
 
+Optionally (`dataplane.compute.enabled`), a separate compute worker and a
+migration Job; see [docs/firecrest-compute.md](docs/firecrest-compute.md#split-compute-api-and-worker).
+
 ## Private GHCR Image Pulls
 
 Keep the GHCR token out of this Git repository. Create a Kubernetes image pull

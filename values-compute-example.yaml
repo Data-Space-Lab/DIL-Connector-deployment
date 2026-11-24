@@ -1,0 +1,63 @@
+# Example overlay for the split compute API/worker (DIL-Connector-source#73).
+# Placeholders only: replace every <...> and create the named Secrets and
+# ConfigMap out of band (see docs/firecrest-compute.md). Never commit values.
+#
+#   helm template connector . -f values-compute-example.yaml
+dataplane:
+  compute:
+    enabled: true
+    image:
+      repository: ghcr.io/data-space-lab/dil-connector-dataplane
+      # Placeholder digest; use the release's real sha256 digest.
+      digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+    sourceRevision: <full-source-commit>
+    imageRevision: <immutable-release-tag>
+    configVersion: "1"
+    protectedSecret: dil-compute-protected-v1
+    settingsConfigMap: dil-compute-settings-v1
+    runtimeEnvSecret: dil-compute-runtime-env
+    env:
+      DATAPLANE_COMPUTE_POLICY_FILE: /run/secrets/compute-provider-policy.json
+      DATAPLANE_COMPUTE_SIGNING_KEY_FILE: /run/secrets/compute-signing.pem
+      DATAPLANE_COMPUTE_FIRECREST_CONFIG_FILE: /run/secrets/firecrest-worker.json
+      DATAPLANE_COMPUTE_DRIVER_FACTORY: dataplane.compute.firecrest.config:load_worker_drivers
+      DATAPLANE_COMPUTE_PROFILES_FILE: /run/secrets/compute-provider-profiles.json
+    hostAliases:
+      # NAT hairpin: public Connector name -> front proxy LAN address.
+      - ip: 192.0.2.10
+        hostnames: [dil-connector.example.org]
+    migration:
+      enabled: true
+      envSecret: dil-compute-migration-env
+    worker:
+      replicas: 2
+      helperSsh:
+        secretName: dil-compute-helper-ssh
+      workspaces:
+        - name: tenant-workspace
+          path: /srv/dil/tenant-a
+        - name: artifact-cache
+          path: /srv/dil/artifact-cache
+        - name: output-snapshots
+          path: /srv/dil/output-snapshots
+      nodeSelector:
+        dil.example.org/compute-execution: "true"
+      networkPolicy:
+        enabled: true
+        egress:
+          # Helper host sshd (the key's from= must match the SNAT source).
+          - to:
+              - ipBlock:
+                  cidr: 198.51.100.20/32
+            ports:
+              - protocol: TCP
+                port: 22
+          # FirecREST, compute PostgreSQL, S3 staging and the Connector.
+          - to:
+              - ipBlock:
+                  cidr: 198.51.100.0/24
+            ports:
+              - protocol: TCP
+                port: 443
+              - protocol: TCP
+                port: 5432

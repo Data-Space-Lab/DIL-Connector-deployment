@@ -217,6 +217,98 @@ dataplane:
     path: /data/dataplane-config.json
     size: 1Gi
     storageClassName: ""
+  # Opt-in compute API/worker split (DIL-Connector-source#73). Disabled, the
+  # chart renders exactly as before. Enabled, dil-connector-dataplane serves the
+  # compute API (app.kubernetes.io/component=dataplane), a separate
+  # dil-connector-compute-worker Deployment (component=compute-worker) runs
+  # `python -m dataplane.compute.worker`, and a hook Job runs `--migrate` with
+  # the migration-owner DSN. See docs/firecrest-compute.md and
+  # values-compute-example.yaml. Never put secret values here; only names.
+  compute:
+    enabled: false
+    # One immutable image for API, worker and migration. Required when enabled.
+    image:
+      repository: ""  # defaults to dataplane.image.repository
+      digest: ""      # sha256:...
+      pullPolicy: IfNotPresent
+    # The image's DIL_CONNECTOR_SOURCE_REVISION / DIL_CONNECTOR_IMAGE_REVISION,
+    # set explicitly so diagnostics can prove parity. Required when enabled.
+    sourceRevision: ""
+    imageRevision: ""
+    # Bump (or rename the Secret/ConfigMap) whenever protected file contents
+    # change: API, worker and migration pods carry a checksum of this and the
+    # other shared values, so they roll together on the same versions.
+    configVersion: "1"
+    # Secret whose keys are the protected files (policy, firecrest-worker.json,
+    # signing keys, staging/output credentials, ...). Copied by an init
+    # container to an in-memory /run/secrets as regular 0400 files.
+    protectedSecret: ""
+    # Optional ConfigMap (e.g. compute-provider-profiles.json) copied the same way.
+    settingsConfigMap: ""
+    # Secret loaded with envFrom into API and worker: runtime-role
+    # DATAPLANE_COMPUTE_DATABASE_URL, DATAPLANE_AUTHORITY_TOKEN,
+    # DATAPLANE_COMPUTE_CONTROL_TOKEN, DATAPLANE_COMPUTE_SIGNING_KEY_ID, ...
+    runtimeEnvSecret: ""
+    protectedSizeLimit: 16Mi
+    # Defaults to <connector.publicBaseUrl>/compute/v1alpha1 and publicBaseUrl.
+    publicEndpoint: ""
+    managementOrigin: ""
+    # Plain (non-secret) settings shared verbatim by API, worker and migration.
+    env:
+      DATAPLANE_COMPUTE_POLICY_FILE: /run/secrets/compute-provider-policy.json
+      DATAPLANE_COMPUTE_SIGNING_KEY_FILE: /run/secrets/compute-signing.pem
+      DATAPLANE_COMPUTE_FIRECREST_CONFIG_FILE: /run/secrets/firecrest-worker.json
+      DATAPLANE_COMPUTE_DRIVER_FACTORY: dataplane.compute.firecrest.config:load_worker_drivers
+    # Pod hostAliases for API, worker and migration (NAT hairpin, helper host).
+    hostAliases: []
+    migration:
+      enabled: true
+      # Secret holding only the migration-owner DATAPLANE_COMPUTE_DATABASE_URL.
+      envSecret: ""
+      backoffLimit: 0
+      # Mount the dataplane settings PVC (GUI-managed profiles). It does not
+      # exist before the first install, so enable only after it does.
+      mountSettingsVolume: false
+    worker:
+      replicas: 2
+      # Mount the API's settings PVC (same DATAPLANE_CONFIG_PATH). ReadWriteOnce
+      # requires the worker on the API's node; otherwise use a RWX class.
+      mountSettingsVolume: true
+      # Helper SSH key and known_hosts, copied to /run/secrets for the worker only.
+      helperSsh:
+        secretName: ""
+        keyKey: compute-tenant-ssh-key
+        knownHostsKey: compute-known-hosts
+      # Tenant workspace, artifact cache and output snapshots, each mounted at
+      # the identical absolute path the FirecREST helper and Slurm use. Each
+      # entry: name, path, and either hostPath (default, hostPathType
+      # Directory) or existingClaim. hostPath pins the worker to nodes that
+      # have that path: set nodeName/nodeSelector/affinity accordingly.
+      workspaces: []
+      nodeName: ""
+      nodeSelector: {}
+      affinity: {}
+      tolerations: []
+      # Extra pod labels, e.g. to select an egress gateway whose fixed source
+      # address matches the helper key's authorized_keys from=.
+      podLabels: {}
+      # hostNetwork gives the worker the node's address as SSH source (then
+      # from= names the node). NetworkPolicy does not apply in that mode.
+      hostNetwork: false
+      networkPolicy:
+        enabled: false
+        # Extra egress rules (DNS is always allowed): helper SSH, FirecREST,
+        # PostgreSQL, S3 staging, Connector authority.
+        egress: []
+      resources:
+        requests:
+          cpu: 250m
+          memory: 512Mi
+          ephemeral-storage: 128Mi
+        limits:
+          cpu: "2"
+          memory: 2Gi
+          ephemeral-storage: 1Gi
 
 service:
   port: 8282

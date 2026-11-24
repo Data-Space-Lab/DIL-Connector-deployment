@@ -1,0 +1,241 @@
+{{- /*
+Compute worker and migration Job for the split compute API/worker
+(Data-Space-Lab/DIL-Connector-source#73). The compute API is the existing
+dil-connector-dataplane Deployment in resources.yaml.
+*/ -}}
+{{- $compute := .Values.dataplane.compute | default dict }}
+{{- if and .Values.dataplane.enabled $compute.enabled }}
+{{- $worker := $compute.worker }}
+{{- if and $worker.hostNetwork $worker.networkPolicy.enabled }}
+{{- fail "dataplane.compute.worker.networkPolicy does not apply to hostNetwork pods; disable one of them" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dil-connector-compute-worker
+  namespace: {{ .Values.namespace | quote }}
+  labels:
+    app: dil-connector-compute-worker
+    app.kubernetes.io/component: compute-worker
+    {{- include "dil-connector.compute.labels" . | nindent 4 }}
+spec:
+  replicas: {{ $worker.replicas }}
+  # Never run workers of two releases at once: the old pods stop before the
+  # new ones start, like the API Deployment.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: dil-connector-compute-worker
+  template:
+    metadata:
+      labels:
+        app: dil-connector-compute-worker
+        app.kubernetes.io/component: compute-worker
+        {{- include "dil-connector.compute.labels" . | nindent 8 }}
+{{- with $worker.podLabels }}
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+      annotations:
+        {{- include "dil-connector.compute.podAnnotations" . | nindent 8 }}
+    spec:
+      serviceAccountName: dil-connector
+      automountServiceAccountToken: false
+{{- if $worker.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+{{- end }}
+{{- with $worker.nodeName }}
+      nodeName: {{ . | quote }}
+{{- end }}
+{{- with $worker.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+{{- with $worker.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+{{- with $worker.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+{{- with $compute.hostAliases }}
+      hostAliases:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+      initContainers:
+        {{- include "dil-connector.compute.initContainer" (dict "root" .) | nindent 8 }}
+      containers:
+        - name: compute-worker
+          image: {{ include "dil-connector.compute.image" . | quote }}
+          imagePullPolicy: {{ $compute.image.pullPolicy | quote }}
+          command: [python, -m, dataplane.compute.worker]
+          envFrom:
+            - secretRef:
+                name: {{ required "dataplane.compute.runtimeEnvSecret is required when dataplane.compute.enabled is true" $compute.runtimeEnvSecret | quote }}
+          env:
+            - name: DATAPLANE_CONTROLLER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ dig "controllerSecret" "name" "dil-connector-controller-auth" .Values.dataPlane | quote }}
+                  key: controller-token
+            - name: DATAPLANE_CONNECTOR_URL
+              value: {{ printf "http://dil-connector-management:%v" .Values.management.port | quote }}
+            - name: DATAPLANE_CONFIG_PATH
+              value: {{ .Values.dataplane.configStorage.path | quote }}
+            {{- include "dil-connector.compute.env" . | nindent 12 }}
+          volumeMounts:
+            - name: compute-protected
+              mountPath: /run/secrets
+              readOnly: true
+{{- if and .Values.dataplane.configStorage.enabled $worker.mountSettingsVolume }}
+            - name: config-data
+              mountPath: /data
+{{- end }}
+{{- range $workspace := $worker.workspaces }}
+            # Identical path to the one the FirecREST helper and Slurm use.
+            - name: {{ $workspace.name | quote }}
+              mountPath: {{ required "every dataplane.compute.worker.workspaces entry needs an absolute path" $workspace.path | quote }}
+{{- end }}
+{{- with $worker.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+{{- end }}
+      volumes:
+        {{- include "dil-connector.compute.volumes" (dict "root" . "helper" true) | nindent 8 }}
+{{- if and .Values.dataplane.configStorage.enabled $worker.mountSettingsVolume }}
+        - name: config-data
+          persistentVolumeClaim:
+            claimName: dil-connector-dataplane-config
+{{- end }}
+{{- range $workspace := $worker.workspaces }}
+{{- if not (hasPrefix "/" $workspace.path) }}
+{{- fail (printf "dataplane.compute.worker.workspaces %s: path must be absolute" $workspace.name) }}
+{{- end }}
+        - name: {{ $workspace.name | quote }}
+{{- if $workspace.existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ $workspace.existingClaim | quote }}
+{{- else }}
+          hostPath:
+            path: {{ $workspace.path | quote }}
+            type: {{ default "Directory" $workspace.hostPathType | quote }}
+{{- end }}
+{{- end }}
+{{- if $worker.networkPolicy.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dil-connector-compute-worker
+  namespace: {{ .Values.namespace | quote }}
+  labels:
+    app.kubernetes.io/component: compute-worker
+    {{- include "dil-connector.compute.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app: dil-connector-compute-worker
+  policyTypes:
+    - Ingress
+    - Egress
+  # The worker serves nothing; deny all ingress.
+  ingress: []
+  egress:
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+{{- with $worker.networkPolicy.egress }}
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- if $compute.migration.enabled }}
+---
+# One-shot forward migration with the migration-owner DSN, before the API and
+# worker roll. Pause provider admission first. Runtime pods never get this DSN.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dil-connector-compute-migrate
+  namespace: {{ .Values.namespace | quote }}
+  labels:
+    app.kubernetes.io/component: compute-migrate
+    {{- include "dil-connector.compute.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "5"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: {{ $compute.migration.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: compute-migrate
+        {{- include "dil-connector.compute.labels" . | nindent 8 }}
+      annotations:
+        {{- include "dil-connector.compute.podAnnotations" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+{{- if .Values.registry.pullSecret.create }}
+      imagePullSecrets:
+        - name: {{ .Values.registry.pullSecret.name | quote }}
+{{- else if .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{- range .Values.imagePullSecrets }}
+        - name: {{ . | quote }}
+{{- end }}
+{{- end }}
+{{- with $compute.hostAliases }}
+      hostAliases:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+      initContainers:
+        {{- include "dil-connector.compute.initContainer" (dict "root" .) | nindent 8 }}
+      containers:
+        - name: compute-migrate
+          image: {{ include "dil-connector.compute.image" . | quote }}
+          imagePullPolicy: {{ $compute.image.pullPolicy | quote }}
+          command: [python, -m, dataplane.compute.worker, --migrate]
+          envFrom:
+            - secretRef:
+                name: {{ required "dataplane.compute.migration.envSecret is required when dataplane.compute.migration.enabled is true" $compute.migration.envSecret | quote }}
+          env:
+            - name: DATAPLANE_CONFIG_PATH
+              value: {{ .Values.dataplane.configStorage.path | quote }}
+            {{- include "dil-connector.compute.env" . | nindent 12 }}
+          volumeMounts:
+            - name: compute-protected
+              mountPath: /run/secrets
+              readOnly: true
+{{- if and .Values.dataplane.configStorage.enabled $compute.migration.mountSettingsVolume }}
+            - name: config-data
+              mountPath: /data
+{{- end }}
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        {{- include "dil-connector.compute.volumes" (dict "root" . "helper" false) | nindent 8 }}
+{{- if and .Values.dataplane.configStorage.enabled $compute.migration.mountSettingsVolume }}
+        - name: config-data
+          persistentVolumeClaim:
+            claimName: dil-connector-dataplane-config
+{{- end }}
+{{- end }}
+{{- end }}

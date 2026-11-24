@@ -482,6 +482,7 @@ spec:
       targetPort: http
 {{- end }}
 {{- if .Values.dataplane.enabled }}
+{{- $compute := .Values.dataplane.compute | default dict }}
 ---
 {{- if .Values.dataplane.configStorage.enabled }}
 apiVersion: v1
@@ -505,6 +506,12 @@ kind: Deployment
 metadata:
   name: dil-connector-dataplane
   namespace: {{ .Values.namespace | quote }}
+{{- if $compute.enabled }}
+  labels:
+    app: dil-connector-dataplane
+    app.kubernetes.io/component: dataplane
+    {{- include "dil-connector.compute.labels" . | nindent 4 }}
+{{- end }}
 spec:
   replicas: {{ .Values.dataplane.replicas }}
   strategy:
@@ -516,15 +523,37 @@ spec:
     metadata:
       labels:
         app: dil-connector-dataplane
+{{- if $compute.enabled }}
+        app.kubernetes.io/component: dataplane
+        {{- include "dil-connector.compute.labels" . | nindent 8 }}
+      annotations:
+        {{- include "dil-connector.compute.podAnnotations" . | nindent 8 }}
+{{- end }}
     spec:
       serviceAccountName: dil-connector
 {{- if .Values.dataplane.nodeName }}
       nodeName: {{ .Values.dataplane.nodeName | quote }}
 {{- end }}
+{{- if $compute.enabled }}
+{{- with $compute.hostAliases }}
+      hostAliases:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+      initContainers:
+        {{- include "dil-connector.compute.initContainer" (dict "root" .) | nindent 8 }}
+{{- end }}
       containers:
         - name: dil-connector-dataplane
+{{- if $compute.enabled }}
+          image: {{ include "dil-connector.compute.image" . | quote }}
+          imagePullPolicy: {{ $compute.image.pullPolicy | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ required "dataplane.compute.runtimeEnvSecret is required when dataplane.compute.enabled is true" $compute.runtimeEnvSecret | quote }}
+{{- else }}
           image: "{{ .Values.dataplane.image.repository }}:{{ .Values.dataplane.image.tag }}"
           imagePullPolicy: {{ .Values.dataplane.image.pullPolicy | quote }}
+{{- end }}
           command:
             - uvicorn
             - dataplane.main:app
@@ -594,7 +623,10 @@ spec:
               value: /data/transfer-store.json
             - name: DATAPLANE_RTSP_PROVIDER_STORE_PATH
               value: /data/rtsp-provider-sessions.json
-{{- if or .Values.dataplane.configStorage.enabled .Values.dataplane.rcloneConfigSecret }}
+{{- if $compute.enabled }}
+            {{- include "dil-connector.compute.env" . | nindent 12 }}
+{{- end }}
+{{- if or .Values.dataplane.configStorage.enabled .Values.dataplane.rcloneConfigSecret $compute.enabled }}
           volumeMounts:
 {{- if .Values.dataplane.configStorage.enabled }}
             - name: config-data
@@ -603,6 +635,11 @@ spec:
 {{- if .Values.dataplane.rcloneConfigSecret }}
             - name: rclone-config
               mountPath: /root/.config/rclone
+              readOnly: true
+{{- end }}
+{{- if $compute.enabled }}
+            - name: compute-protected
+              mountPath: /run/secrets
               readOnly: true
 {{- end }}
 {{- end }}
@@ -627,7 +664,7 @@ spec:
             periodSeconds: 20
           resources:
 {{ toYaml (.Values.dataplane.resources | default .Values.resources) | indent 12 }}
-{{- if or .Values.dataplane.configStorage.enabled .Values.dataplane.rcloneConfigSecret }}
+{{- if or .Values.dataplane.configStorage.enabled .Values.dataplane.rcloneConfigSecret $compute.enabled }}
       volumes:
 {{- if .Values.dataplane.configStorage.enabled }}
         - name: config-data
@@ -641,6 +678,9 @@ spec:
             items:
               - key: rclone.conf
                 path: rclone.conf
+{{- end }}
+{{- if $compute.enabled }}
+        {{- include "dil-connector.compute.volumes" (dict "root" . "helper" false) | nindent 8 }}
 {{- end }}
 {{- end }}
 ---
